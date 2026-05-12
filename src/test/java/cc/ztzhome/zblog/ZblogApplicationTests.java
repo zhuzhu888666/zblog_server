@@ -8,6 +8,7 @@ class ZblogApplicationTests {
 
     @Test
     void contextLoads() {
+        System.out.println("你干嘛，哎哟");
     }
 
 }

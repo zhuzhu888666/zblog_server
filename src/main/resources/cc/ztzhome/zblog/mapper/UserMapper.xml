@@ -51,6 +51,15 @@
 
     <!--根据user_id查询-->
     <select id="selectById" resultMap="UserResultMap">
-        SELECT * FROM user WHERE user_id = #{userId}
+        SELECT * FROM tb_user WHERE user_id = #{userId}
+    </select>
+    <select id="selectAllByEmail" resultType="cc.ztzhome.zblog.bean.entity.User">
+        SELECT * FROM tb_user WHERE email=#{email}
+    </select>
+    <!-- 根据邮箱查询用户是否存在（返回 true/false） -->
+    <select id="existsByEmail" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM tb_user WHERE email = #{email}
+        )
     </select>
 </mapper>
