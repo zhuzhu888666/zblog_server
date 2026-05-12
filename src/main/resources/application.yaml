@@ -1,0 +1,58 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: zblog_server
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver   # MySQL 8 驱动，若为 MySQL 5 可改为 com.mysql.jdbc.Driver
+    url: jdbc:mysql://your_adress:3306/zblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username:                          # 替换为你的数据库用户名
+    password:              # 替换为你的数据库密码
+    # HikariCP 连接池配置（Spring Boot 默认）
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 15
+      idle-timeout: 30000
+      connection-timeout: 30000
+      pool-name: ZblogHikariPool
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  # mapper XML 文件位置
+  mapper-locations: classpath*:mapper/**/*.xml
+  # 实体类包路径（用于别名）
+  ttype-aliases-package: cc.ztzhome.zblog.entity
+  # 全局配置
+  global-config:
+    db-config:
+      # 全局逻辑删除字段名
+      logic-delete-field: deleted
+      # 逻辑删除值 (默认为1)
+      logic-delete-value: 1
+      # 逻辑未删除值 (默认为0)
+      logic-not-delete-value: 0
+      # 主键类型：AUTO(自增), INPUT(手动输入), ASSIGN_ID(雪花ID), ASSIGN_UUID(UUID)
+      id-type: AUTO
+      # 表前缀（若统一加前缀可配置）
+      # table-prefix: t_
+  # 配置项
+  configuration:
+    # 下划线转驼峰
+    map-underscore-to-camel-case: true
+    # 开启二级缓存（默认 false）
+    cache-enabled: false
+    # 日志输出：StdOutImpl 会输出到控制台，生产环境可改为 Slf4jImpl 或不配置
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志级别（方便调试 SQL）
+logging:
+  level:
+    cc.ztzhome.zblog: debug   # 替换为你项目的根包，开启 debug 可输出 SQL 和参数
+    com.baomidou.mybatisplus: info
+
+# JWT 配置
+jwt:
+  secret: mySecretKey1234567890123456789012345678901234567890  # JWT 密钥，至少 32 字节
+  expiration: 604800000  # 普通登录 token 有效期（毫秒），7 天
+  remember-me-expiration: 2592000000  # 记住我 token 有效期（毫秒），30 天
