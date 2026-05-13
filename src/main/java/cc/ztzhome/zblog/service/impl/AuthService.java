@@ -1,15 +1,66 @@
 package cc.ztzhome.zblog.service.impl;
 
 import cc.ztzhome.zblog.bean.dto.LoginDto;
+import cc.ztzhome.zblog.bean.entity.User;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.LoginVo;
+import cc.ztzhome.zblog.bean.vo.UserVo;
+import cc.ztzhome.zblog.mapper.UserMapper;
 import cc.ztzhome.zblog.service.IAuthService;
+import cc.ztzhome.zblog.utils.BCryptUtil;
+import cc.ztzhome.zblog.utils.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService implements IAuthService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    /**
+     * 用户登录：校验邮箱密码，生成 JWT Token 并返回用户信息
+     */
     @Override
     public ResponseModel<LoginVo> userLogin(LoginDto loginDto) {
-        return null;
+        // 1. 参数校验
+        String email = loginDto.getEmail();
+        String password = loginDto.getPassword();
+
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "邮箱和密码不能为空");
+        }
+
+        // 2. 查询用户
+        User user = userMapper.selectAllByEmail(email);
+        if (user == null) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "邮箱或密码错误");
+        }
+
+        // 3. 校验密码
+        if (!BCryptUtil.match(password, user.getPassword())) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "邮箱或密码错误");
+        }
+
+        // 4. 生成 Token
+        String token = jwtUtil.generateToken(user.getUserId(), String.valueOf(user.getRole()));
+
+        // 5. 构建响应
+        UserVo userVo = new UserVo();
+        userVo.setUserId(user.getUserId());
+        userVo.setEmail(user.getEmail());
+        userVo.setRole(user.getRole());
+        userVo.setNickname(user.getNickname());
+        userVo.setGender(user.getGender());
+        userVo.setIntroduction(user.getIntroduction());
+
+        LoginVo loginVo = new LoginVo();
+        loginVo.setToken(token);
+        loginVo.setUserVo(userVo);
+
+        return ResponseModel.success("登录成功", loginVo);
     }
 }

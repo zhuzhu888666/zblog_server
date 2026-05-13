@@ -113,12 +113,23 @@ public class ResponseModel<T> {
     }
 
     /**
+     * 创建一个默认错误响应，参数错误（自定义消息）
+     *
+     * @param message 错误消息
+     * @param <T>     数据类型（通常为null）
+     * @return 错误响应对象
+     */
+    public static <T> ResponseModel<T> error( String message) {
+        return new ResponseModel<>(CODE_BAD_REQUEST, message, null);
+    }
+
+    /**
      * 创建一个默认的服务器内部错误响应
      *
      * @param <T> 数据类型
      * @return 错误响应对象
      */
-    public static <T> ResponseModel<T> internalError() {
+    public static <T> ResponseModel<T> serverError() {
         return error(CODE_INTERNAL_ERROR, "服务器内部错误，请稍后再试");
     }
 

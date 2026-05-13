@@ -8,4 +8,5 @@ import lombok.Setter;
 public class LoginDto {
     private String email;
     private String password;
+    private int isLongLogin;
 }
