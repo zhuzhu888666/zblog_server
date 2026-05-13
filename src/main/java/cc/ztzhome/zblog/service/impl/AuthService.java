@@ -1,6 +1,7 @@
 package cc.ztzhome.zblog.service.impl;
 
 import cc.ztzhome.zblog.bean.dto.LoginDto;
+import cc.ztzhome.zblog.bean.dto.RegisterDto;
 import cc.ztzhome.zblog.bean.entity.User;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.LoginVo;
@@ -62,5 +63,38 @@ public class AuthService implements IAuthService {
         loginVo.setUserVo(userVo);
 
         return ResponseModel.success("登录成功", loginVo);
+    }
+
+    @Override
+    public ResponseModel userRegister(RegisterDto rDto) {
+        // 1. 参数校验
+        String email = rDto.getEmail();
+        String password = rDto.getPassword();
+
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "邮箱和密码不能为空");
+        }
+
+        // 2. 检查邮箱是否已注册
+        if (userMapper.existsByEmail(email)) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "该邮箱已被注册");
+        }
+
+        // 3. 构建用户实体
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(BCryptUtil.encrypt(password));
+        user.setRole(rDto.getRole());
+        user.setNickname(rDto.getNickname());
+        user.setGender(rDto.getGender());
+        user.setIntroduction(rDto.getIntroduction());
+
+        // 4. 插入数据库
+        int result = userMapper.insertUser(user);
+        if (result <= 0) {
+            return ResponseModel.serverError();
+        }
+
+        return ResponseModel.success("注册成功");
     }
 }
