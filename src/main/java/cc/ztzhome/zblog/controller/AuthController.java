@@ -16,7 +16,8 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/public/login")
-    public ResponseModel<LoginVo> userLogin(LoginDto loginDto){
+    public ResponseModel<LoginVo> userLogin(@RequestBody LoginDto loginDto){
+        System.out.println("邮箱："+loginDto.getEmail()+"\t 密码："+loginDto.getPassword());
         return authService.userLogin(loginDto);
     }
 
@@ -24,4 +25,10 @@ public class AuthController {
     public ResponseModel userRegister(@RequestBody RegisterDto rDto){
         return authService.userRegister(rDto);
     }
+
+    //修改账户信息
+
+
+    //注销账号
+
 }

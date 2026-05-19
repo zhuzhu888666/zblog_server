@@ -94,6 +94,12 @@
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <version>3.5.15</version>
         </dependency>
+        <!--RustFs-->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.25.28</version>
+        </dependency>
     </dependencies>
 
     <build>

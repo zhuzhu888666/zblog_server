@@ -24,7 +24,7 @@ public class SecurityConfig {
                 // 权限配置
                 .authorizeHttpRequests(auth -> auth
                         // 公开接口放行
-                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/public/**","/api/public/**").permitAll()
                         // 其余所有接口需要认证
                         .anyRequest().authenticated()
                 );

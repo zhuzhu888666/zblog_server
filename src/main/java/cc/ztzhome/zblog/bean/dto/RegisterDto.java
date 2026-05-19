@@ -3,6 +3,8 @@ package cc.ztzhome.zblog.bean.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Setter
 @Getter
 public class RegisterDto {
@@ -12,4 +14,5 @@ public class RegisterDto {
     private String nickname;
     private int gender;
     private String introduction;
+    private LocalDate birthday;
 }

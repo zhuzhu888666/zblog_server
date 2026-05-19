@@ -57,6 +57,10 @@ public class AuthService implements IAuthService {
         userVo.setNickname(user.getNickname());
         userVo.setGender(user.getGender());
         userVo.setIntroduction(user.getIntroduction());
+        userVo.setStatus(user.getStatus());
+        userVo.setUserAvatar(user.getUserAvatar());
+        userVo.setCreateTime(user.getCreateTime());
+        userVo.setBirthday(user.getBirthday());
 
         LoginVo loginVo = new LoginVo();
         loginVo.setToken(token);
@@ -83,11 +87,13 @@ public class AuthService implements IAuthService {
         // 3. 构建用户实体
         User user = new User();
         user.setEmail(email);
+        //加密密码
         user.setPassword(BCryptUtil.encrypt(password));
         user.setRole(rDto.getRole());
         user.setNickname(rDto.getNickname());
         user.setGender(rDto.getGender());
         user.setIntroduction(rDto.getIntroduction());
+        user.setBirthday(rDto.getBirthday());
 
         // 4. 插入数据库
         int result = userMapper.insertUser(user);

@@ -12,16 +12,22 @@
         <result property="nickname" column="nickname" />
         <result property="gender" column="gender" />
         <result property="introduction" column="introduction" />
+        <result property="status" column="status" />
+        <result property="userAvatar" column="user_avatar" />
+        <result property="createTime" column="create_time" />
+        <result property="birthday" column="birthday" />
     </resultMap>
 
     <!-- 动态插入 SQL：主键自增，使用 useGeneratedKeys 返回生成的主键 -->
     <insert id="insertUser" parameterType="cc.ztzhome.zblog.bean.entity.User"
             useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO user
+        INSERT INTO tb_user
         <trim prefix="(" suffix=")" suffixOverrides=",">
             email,
             password,
             role,
+            status,
+            create_time,
             <if test="nickname != null and nickname != ''">
                 nickname,
             </if>
@@ -31,12 +37,20 @@
             <if test="introduction != null and introduction != ''">
                 introduction,
             </if>
+            <if test="userAvatar != null and userAvatar != ''">
+                user_avatar,
+            </if>
+            <if test="birthday != null">
+                birthday,
+            </if>
         </trim>
         VALUES
         <trim prefix="(" suffix=")" suffixOverrides=",">
             #{email},
             #{password},
             #{role},
+            #{status},
+            #{createTime},
             <if test="nickname != null and nickname != ''">
                 #{nickname},
             </if>
@@ -45,6 +59,12 @@
             </if>
             <if test="introduction != null and introduction != ''">
                 #{introduction},
+            </if>
+            <if test="userAvatar != null and userAvatar != ''">
+                #{userAvatar},
+            </if>
+            <if test="birthday != null">
+                #{birthday},
             </if>
         </trim>
     </insert>
