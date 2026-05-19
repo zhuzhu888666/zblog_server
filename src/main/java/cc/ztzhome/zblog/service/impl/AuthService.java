@@ -97,7 +97,7 @@ public class AuthService implements IAuthService {
         if (userMapper.existsByEmail(email)) {
             return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "该邮箱已被注册");
         }
-
+        System.out.println("注册的email:"+email);
         // 3. 构建用户实体（role 强制为 1，不允许客户端设置）
         User user = new User();
         user.setEmail(email);
