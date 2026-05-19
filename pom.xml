@@ -2,17 +2,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot 父项目，提供依赖管理和插件管理 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>4.0.6</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/> <!-- 从仓库查找父项目 -->
     </parent>
+
+    <!-- 项目坐标 -->
     <groupId>cc.ztzhome.zblog</groupId>
     <artifactId>zblog_server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>zblog_server</name>
     <description>zblog_server</description>
+
+    <!-- 以下为可选的项目元信息，留空表示暂无 -->
     <url/>
     <licenses>
         <license/>
@@ -26,75 +32,102 @@
         <tag/>
         <url/>
     </scm>
+
+    <!-- 项目属性配置 -->
     <properties>
-        <java.version>25</java.version>
+        <java.version>25</java.version> <!-- 使用 Java 25 版本 -->
     </properties>
+
     <dependencies>
+        <!-- Spring Boot JDBC 启动器，提供 JdbcTemplate 等数据库操作支持 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
+
+        <!-- Spring Boot Web MVC 启动器，用于构建 RESTful API 和 Web 应用 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
+        <!-- Spring Boot 开发工具，支持热部署，仅在运行时使用 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+
+        <!-- MySQL 数据库驱动，用于连接 MySQL 数据库 -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- Spring Boot JDBC 测试启动器，用于测试数据库相关代码（仅测试） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Spring Boot Web MVC 测试启动器，用于测试 Controller 和 Web 层（仅测试） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Lombok，通过注解简化 Java 代码（如 Getter/Setter），编译时生效 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!--JWT-->
+
+        <!-- JWT API，用于创建和解析 JSON Web Token -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.12.6</version>
         </dependency>
+        <!-- JWT 实现库，运行时需要 -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
             <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- JWT 与 Jackson 集成，支持 JSON 序列化/反序列化 -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
             <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
-        <!--包含BCrypt-->
+
+        <!-- Spring Boot 参数校验启动器，包含 Hibernate Validator 和 BCrypt 密码加密 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Security 启动器，提供身份认证和授权功能 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-        <!--mybatis-plus-->
+
+        <!-- MyBatis-Plus 启动器（适配 Spring Boot 4.x），简化 MyBatis 操作 -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <version>3.5.15</version>
         </dependency>
-        <!--RustFs-->
+
+        <!-- AWS S3 SDK，用于对接 RustFs（兼容 S3 协议的对象存储） -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
@@ -104,10 +137,12 @@
 
     <build>
         <plugins>
+            <!-- Spring Boot Maven 插件，用于打包可执行 JAR 并管理生命周期 -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- Maven 编译插件，配置 Lombok 注解处理器 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

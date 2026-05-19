@@ -8,5 +8,5 @@ import cc.ztzhome.zblog.bean.vo.LoginVo;
 public interface IAuthService {
     ResponseModel<LoginVo> userLogin(LoginDto loginDto);
 
-    ResponseModel userRegister(RegisterDto rDto);
+    ResponseModel<LoginVo> userRegister(RegisterDto rDto);
 }

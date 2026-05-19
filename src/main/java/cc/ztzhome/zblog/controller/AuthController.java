@@ -5,6 +5,7 @@ import cc.ztzhome.zblog.bean.dto.RegisterDto;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.LoginVo;
 import cc.ztzhome.zblog.service.impl.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/public/register")
-    public ResponseModel userRegister(@RequestBody RegisterDto rDto){
+    public ResponseModel<LoginVo> userRegister(@Valid @RequestBody RegisterDto rDto){
         return authService.userRegister(rDto);
     }
 

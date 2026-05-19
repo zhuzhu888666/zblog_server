@@ -47,7 +47,8 @@ public class AuthService implements IAuthService {
         }
 
         // 4. 生成 Token
-        String token = jwtUtil.generateToken(user.getUserId(), String.valueOf(user.getRole()));
+        boolean isRememberMe = loginDto.getIsLongLogin() == 1;
+        String token = jwtUtil.generateToken(user.getUserId(), String.valueOf(user.getRole()), isRememberMe);
 
         // 5. 构建响应
         UserVo userVo = new UserVo();
@@ -70,13 +71,26 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public ResponseModel userRegister(RegisterDto rDto) {
-        // 1. 参数校验
+    public ResponseModel<LoginVo> userRegister(RegisterDto rDto) {
         String email = rDto.getEmail();
         String password = rDto.getPassword();
+        String confirmPassword = rDto.getConfirmPassword();
 
-        if (email == null || email.isBlank() || password == null || password.isBlank()) {
-            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "邮箱和密码不能为空");
+        // 1. 参数校验（防御性编程，控制器层已有 @Valid）
+        if (email == null || email.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "邮箱不能为空");
+        }
+        if (password == null || password.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "密码不能为空");
+        }
+        if (confirmPassword == null || confirmPassword.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "确认密码不能为空");
+        }
+        if (!password.equals(confirmPassword)) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "两次输入的密码不一致");
+        }
+        if (password.length() < 6) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "密码长度不能少于6位");
         }
 
         // 2. 检查邮箱是否已注册
@@ -84,12 +98,11 @@ public class AuthService implements IAuthService {
             return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "该邮箱已被注册");
         }
 
-        // 3. 构建用户实体
+        // 3. 构建用户实体（role 强制为 1，不允许客户端设置）
         User user = new User();
         user.setEmail(email);
-        //加密密码
         user.setPassword(BCryptUtil.encrypt(password));
-        user.setRole(rDto.getRole());
+        user.setRole(1);
         user.setNickname(rDto.getNickname());
         user.setGender(rDto.getGender());
         user.setIntroduction(rDto.getIntroduction());
@@ -101,6 +114,25 @@ public class AuthService implements IAuthService {
             return ResponseModel.serverError();
         }
 
-        return ResponseModel.success("注册成功");
+        // 5. 注册成功，生成 Token 并返回用户信息（自动登录）
+        String token = jwtUtil.generateToken(user.getUserId(), String.valueOf(user.getRole()));
+
+        UserVo userVo = new UserVo();
+        userVo.setUserId(user.getUserId());
+        userVo.setEmail(user.getEmail());
+        userVo.setRole(user.getRole());
+        userVo.setNickname(user.getNickname());
+        userVo.setGender(user.getGender());
+        userVo.setIntroduction(user.getIntroduction());
+        userVo.setStatus(user.getStatus());
+        userVo.setUserAvatar(user.getUserAvatar());
+        userVo.setCreateTime(user.getCreateTime());
+        userVo.setBirthday(user.getBirthday());
+
+        LoginVo loginVo = new LoginVo();
+        loginVo.setToken(token);
+        loginVo.setUserVo(userVo);
+
+        return ResponseModel.success("注册成功", loginVo);
     }
 }
