@@ -82,4 +82,21 @@
             SELECT 1 FROM tb_user WHERE email = #{email}
         )
     </select>
+
+    <!-- 更新用户密码 -->
+    <update id="updatePassword">
+        UPDATE tb_user SET password = #{password} WHERE user_id = #{userId}
+    </update>
+
+    <!-- 更新用户资料 -->
+    <update id="updateProfile">
+        UPDATE tb_user
+        <set>
+            <if test="nickname != null and nickname != ''">nickname = #{nickname},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="introduction != null">introduction = #{introduction},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
 </mapper>

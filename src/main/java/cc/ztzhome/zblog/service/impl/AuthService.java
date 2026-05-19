@@ -2,6 +2,7 @@ package cc.ztzhome.zblog.service.impl;
 
 import cc.ztzhome.zblog.bean.dto.LoginDto;
 import cc.ztzhome.zblog.bean.dto.RegisterDto;
+import cc.ztzhome.zblog.bean.dto.UpdateUserDto;
 import cc.ztzhome.zblog.bean.entity.User;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.LoginVo;
@@ -68,6 +69,87 @@ public class AuthService implements IAuthService {
         loginVo.setUserVo(userVo);
 
         return ResponseModel.success("登录成功", loginVo);
+    }
+
+    @Override
+    public ResponseModel<Void> changePassword(Long userId, String oldPassword, String newPassword) {
+        if (userId == null) {
+            return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
+        }
+        if (oldPassword == null || oldPassword.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "原密码不能为空");
+        }
+        if (newPassword == null || newPassword.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "新密码不能为空");
+        }
+        if (newPassword.length() < 6) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "新密码长度不能少于6位");
+        }
+
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "用户不存在");
+        }
+
+        if (!BCryptUtil.match(oldPassword, user.getPassword())) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "原密码错误");
+        }
+
+        if (BCryptUtil.match(newPassword, user.getPassword())) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "新密码不能与原密码相同");
+        }
+
+        String hashedPassword = BCryptUtil.encrypt(newPassword);
+        int result = userMapper.updatePassword(userId, hashedPassword);
+        if (result <= 0) {
+            return ResponseModel.serverError();
+        }
+
+        //删除Redis上的token让其重新登录；
+
+        return ResponseModel.success("密码修改成功");
+    }
+
+    @Override
+    public ResponseModel<UserVo> updateProfile(Long userId, UpdateUserDto dto) {
+        if (userId == null) {
+            return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
+        }
+
+        String nickname = dto.getNickname();
+        String introduction = dto.getIntroduction();
+
+        if (nickname != null && nickname.isBlank()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "昵称不能为空");
+        }
+        if (introduction != null && introduction.length() > 200) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "个人简介不能超过200字");
+        }
+
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "用户不存在");
+        }
+
+        int result = userMapper.updateProfile(userId, nickname, dto.getGender(), introduction, dto.getBirthday());
+        if (result <= 0) {
+            return ResponseModel.serverError();
+        }
+
+        User updated = userMapper.selectById(userId);
+        UserVo userVo = new UserVo();
+        userVo.setUserId(updated.getUserId());
+        userVo.setEmail(updated.getEmail());
+        userVo.setRole(updated.getRole());
+        userVo.setNickname(updated.getNickname());
+        userVo.setGender(updated.getGender());
+        userVo.setIntroduction(updated.getIntroduction());
+        userVo.setStatus(updated.getStatus());
+        userVo.setUserAvatar(updated.getUserAvatar());
+        userVo.setCreateTime(updated.getCreateTime());
+        userVo.setBirthday(updated.getBirthday());
+
+        return ResponseModel.success("资料更新成功", userVo);
     }
 
     @Override

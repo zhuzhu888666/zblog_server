@@ -73,8 +73,8 @@ public class ResponseModel<T> {
      * @param <T> 数据类型
      * @return 成功响应对象
      */
-    public static <T> ResponseModel<T> success() {
-        return success(null);
+    public static <T> ResponseModel<T> success(String message) {
+        return new ResponseModel<>(CODE_SUCCESS,message,null);
     }
 
     /**

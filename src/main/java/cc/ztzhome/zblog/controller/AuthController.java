@@ -1,10 +1,14 @@
 package cc.ztzhome.zblog.controller;
 
+import cc.ztzhome.zblog.bean.dto.ChangePasswordDto;
 import cc.ztzhome.zblog.bean.dto.LoginDto;
 import cc.ztzhome.zblog.bean.dto.RegisterDto;
+import cc.ztzhome.zblog.bean.dto.UpdateUserDto;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.LoginVo;
+import cc.ztzhome.zblog.bean.vo.UserVo;
 import cc.ztzhome.zblog.service.impl.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,8 +31,19 @@ public class AuthController {
         return authService.userRegister(rDto);
     }
 
-    //修改账户信息
+    @PostMapping("/user/password")
+    public ResponseModel<Void> changePassword(@Valid @RequestBody ChangePasswordDto dto,
+                                              HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return authService.changePassword(userId, dto.getOldPassword(), dto.getNewPassword());
+    }
 
+    @PostMapping("/user/profile")
+    public ResponseModel<UserVo> updateProfile(@Valid @RequestBody UpdateUserDto dto,
+                                                HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return authService.updateProfile(userId, dto);
+    }
 
     //注销账号
 
