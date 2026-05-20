@@ -1,5 +1,7 @@
 server:
   port: 8080
+  servlet:
+    context-path: /api
 spring:
   application:
     name: zblog_server
@@ -56,3 +58,10 @@ jwt:
   secret: mySecretKey1234567890123456789012345678901234567890  # JWT 密钥，至少 32 字节
   expiration: 604800000  # 普通登录 token 有效期（毫秒），7 天
   remember-me-expiration: 2592000000  # 记住我 token 有效期（毫秒），30 天
+
+# RustFS 对象存储配置（S3 兼容）
+rustfs:
+  endpoint: http://127.0.0.1:9000    # RustFS 服务端点地址
+  access-key: your-access-key         # 访问密钥
+  secret-key: your-secret-key         # 私密密钥
+  bucket: zblog                       # 存储桶名称
