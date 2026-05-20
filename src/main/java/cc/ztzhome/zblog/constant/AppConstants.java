@@ -8,6 +8,9 @@ public final class AppConstants {
     private AppConstants() {
     }
 
+    //普通临时Url过期时间->24小时
+    public static final long URL_TIMEOUT= 1000L*60*60*24;
+
     // ==================== 用户 ====================
 
     /** 用户头像路径 */
