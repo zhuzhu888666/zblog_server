@@ -51,8 +51,7 @@ public class RustFsServiceImpl implements RustFsService {
                 log.info("Bucket '{}' 已创建", bucket);
             }
         } catch (Exception e) {
-            log.error("RustFS 初始化失败", e);
-            throw new RuntimeException("RustFS 初始化失败", e);
+            log.warn("RustFS 初始化失败，文件存储服务暂不可用: {}", e.getMessage());
         }
     }
 
