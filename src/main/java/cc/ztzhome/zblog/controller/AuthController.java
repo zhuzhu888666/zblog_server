@@ -13,7 +13,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 public class AuthController {
@@ -43,6 +45,13 @@ public class AuthController {
                                                 HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return authService.updateProfile(userId, dto);
+    }
+
+    @PostMapping("/user/avatar")
+    public ResponseModel<UserVo> updateAvatar(@RequestParam("file") MultipartFile file,
+                                               HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return authService.updateAvatar(userId, file);
     }
 
     //注销账号

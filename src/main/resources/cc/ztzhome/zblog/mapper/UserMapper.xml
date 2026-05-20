@@ -99,4 +99,9 @@
         </set>
         WHERE user_id = #{userId}
     </update>
+
+    <!-- 更新用户头像 -->
+    <update id="updateAvatar">
+        UPDATE tb_user SET user_avatar = #{userAvatar} WHERE user_id = #{userId}
+    </update>
 </mapper>

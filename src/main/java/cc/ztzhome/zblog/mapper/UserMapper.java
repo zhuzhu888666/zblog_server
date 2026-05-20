@@ -24,4 +24,7 @@ public interface UserMapper {
                       @Param("gender") Integer gender,
                       @Param("introduction") String introduction,
                       @Param("birthday") LocalDate birthday);
+
+    //更新用户头像
+    int updateAvatar(@Param("userId") Long userId, @Param("userAvatar") String userAvatar);
 }

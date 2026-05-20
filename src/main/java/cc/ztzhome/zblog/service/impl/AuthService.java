@@ -7,12 +7,18 @@ import cc.ztzhome.zblog.bean.entity.User;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.LoginVo;
 import cc.ztzhome.zblog.bean.vo.UserVo;
+import cc.ztzhome.zblog.constant.AppConstants;
 import cc.ztzhome.zblog.mapper.UserMapper;
 import cc.ztzhome.zblog.service.IAuthService;
+import cc.ztzhome.zblog.service.RustFsService;
 import cc.ztzhome.zblog.utils.BCryptUtil;
+import cc.ztzhome.zblog.utils.FileTypeUtil;
 import cc.ztzhome.zblog.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 public class AuthService implements IAuthService {
@@ -22,6 +28,9 @@ public class AuthService implements IAuthService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private RustFsService rustFsService;
 
     /**
      * 用户登录：校验邮箱密码，生成 JWT Token 并返回用户信息
@@ -150,6 +159,52 @@ public class AuthService implements IAuthService {
         userVo.setBirthday(updated.getBirthday());
 
         return ResponseModel.success("资料更新成功", userVo);
+    }
+
+    @Override
+    public ResponseModel<UserVo> updateAvatar(Long userId, MultipartFile file) {
+        if (userId == null) {
+            return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
+        }
+        if (file == null || file.isEmpty()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "请选择要上传的图片");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (!"image".equals(FileTypeUtil.getFileType(originalFilename))) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "不支持的图片格式，仅支持 JPG、PNG、GIF、WebP");
+        }
+
+        if (file.getSize() > 10 * 1024 * 1024) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "图片大小不能超过 10MB");
+        }
+
+        String extension = FileTypeUtil.getFileExtension2(originalFilename);
+        String objectKey = AppConstants.USER_AVATAR + userId + extension;
+
+        try {
+            rustFsService.upload(objectKey, file.getInputStream(), file.getSize(), file.getContentType());
+        } catch (IOException e) {
+            return ResponseModel.serverError();
+        }
+
+        String avatarUrl = rustFsService.presignedGetUrl(objectKey, 10080);
+        userMapper.updateAvatar(userId, avatarUrl);
+
+        User updated = userMapper.selectById(userId);
+        UserVo userVo = new UserVo();
+        userVo.setUserId(updated.getUserId());
+        userVo.setEmail(updated.getEmail());
+        userVo.setRole(updated.getRole());
+        userVo.setNickname(updated.getNickname());
+        userVo.setGender(updated.getGender());
+        userVo.setIntroduction(updated.getIntroduction());
+        userVo.setStatus(updated.getStatus());
+        userVo.setUserAvatar(updated.getUserAvatar());
+        userVo.setCreateTime(updated.getCreateTime());
+        userVo.setBirthday(updated.getBirthday());
+
+        return ResponseModel.success("头像更新成功", userVo);
     }
 
     @Override
