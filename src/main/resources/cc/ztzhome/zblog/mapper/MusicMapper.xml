@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.ztzhome.zblog.mapper.MusicMapper">
+
+    <resultMap id="MusicResultMap" type="cc.ztzhome.zblog.bean.entity.Music">
+        <id column="music_id" property="musicId"/>
+        <result column="title" property="title"/>
+        <result column="artist_id" property="artistId"/>
+        <result column="artist" property="artist"/>
+        <result column="duration" property="duration"/>
+        <result column="file_path" property="filePath"/>
+        <result column="cover_path" property="coverPath"/>
+        <result column="genre" property="genre"/>
+        <result column="release_time" property="releaseTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <insert id="insertMusic" useGeneratedKeys="true" keyProperty="musicId">
+        INSERT INTO tb_music (title, artist_id, artist, duration, file_path, cover_path, genre, release_time)
+        VALUES (#{title}, #{artistId}, #{artist}, #{duration}, #{filePath}, #{coverPath}, #{genre}, #{releaseTime})
+    </insert>
+
+    <select id="selectById" resultMap="MusicResultMap">
+        SELECT * FROM tb_music WHERE music_id = #{musicId} AND deleted = 0
+    </select>
+
+    <select id="selectByPage" resultMap="MusicResultMap">
+        SELECT * FROM tb_music WHERE deleted = 0 ORDER BY create_time DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM tb_music WHERE deleted = 0
+    </select>
+
+    <update id="updateMusic">
+        UPDATE tb_music
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="artist != null">artist = #{artist},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="filePath != null">file_path = #{filePath},</if>
+            <if test="coverPath != null">cover_path = #{coverPath},</if>
+            <if test="genre != null">genre = #{genre},</if>
+            <if test="releaseTime != null">release_time = #{releaseTime},</if>
+            update_time = NOW()
+        </set>
+        WHERE music_id = #{musicId} AND deleted = 0
+    </update>
+
+    <update id="deleteById">
+        UPDATE tb_music SET deleted = 1 WHERE music_id = #{musicId}
+    </update>
+
+</mapper>

@@ -16,16 +16,15 @@ public final class AppConstants {
     /** 用户头像路径 */
     public static final String USER_AVATAR = "user/userAvatar/";
 
-    // ==================== 音乐 ====================
-
+    /**==================== 音乐模块 ====================**/
     /** 音乐文件存放路径 */
-    public static final String SONG_SAVE_PATH = "music/songs/";
+    public static final String MUSIC_SAVE_PATH = "music/music/";
 
     /** 歌曲封面存放路径 */
-    public static final String SONG_COVER_PATH = "music/cover/";
+    public static final String MUSIC_COVER_PATH = "music/cover/";
 
     /** 歌词存放路径 */
-    public static final String SONG_LYRIC_PATH = "music/lrc/";
+    public static final String MUSIC_LYRIC_PATH = "music/lrc/";
 
     /** 歌单封面存放路径 */
     public static final String PLAYLIST_COVER_PATH = "music/cover/";
