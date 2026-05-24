@@ -14,4 +14,8 @@ public interface IArticleService {
     ResponseModel<ArticleVo> getArticle(Long articleId);
 
     ResponseModel<List<ArticleVo>> getRandomArticles(Integer page, Integer pageSize);
+
+    ResponseModel<List<ArticleVo>> listUserArticles(Long userId);
+
+    ResponseModel<Void> deleteArticle(Long userId, Long articleId);
 }

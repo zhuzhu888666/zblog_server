@@ -110,6 +110,45 @@ public class ArticleServiceImpl implements IArticleService {
     }
 
     @Override
+    public ResponseModel<List<ArticleVo>> listUserArticles(Long userId) {
+        if (userId == null) {
+            return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
+        }
+        List<Article> articles = articleMapper.selectByUserId(userId);
+        List<ArticleVo> voList = new ArrayList<>();
+        for (Article article : articles) {
+            voList.add(toArticleVo(article));
+        }
+        return ResponseModel.success(voList);
+    }
+
+    @Override
+    public ResponseModel<Void> deleteArticle(Long userId, Long articleId) {
+        if (userId == null) {
+            return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
+        }
+        if (articleId == null) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "文章ID不能为空");
+        }
+        Article article = articleMapper.selectById(articleId);
+        if (article == null) {
+            return ResponseModel.notFound();
+        }
+        if (article.getUserId() != userId) {
+            return ResponseModel.error(ResponseModel.CODE_FORBIDDEN, "只能删除自己的文章");
+        }
+        articleMapper.updateStatus(articleId, 0);
+        if (article.getCoverKey() != null && !article.getCoverKey().isEmpty()) {
+            try {
+                rustFsService.deleteObject(article.getCoverKey());
+            } catch (Exception e) {
+                log.warn("Failed to delete cover from RustFS: {}", article.getCoverKey(), e);
+            }
+        }
+        return ResponseModel.success("删除成功");
+    }
+
+    @Override
     public ResponseModel<ArticleVo> getArticle(Long articleId) {
         if (articleId == null) {
             return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "文章ID不能为空");

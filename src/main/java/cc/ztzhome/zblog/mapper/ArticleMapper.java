@@ -16,5 +16,9 @@ public interface ArticleMapper {
 
     List<Article> selectRandomPublishedList(@Param("offset") int offset, @Param("limit") int limit);
 
+    List<Article> selectByUserId(Long userId);
+
     int updateCoverKey(@Param("articleId") Long articleId, @Param("coverKey") String coverKey);
+
+    int updateStatus(@Param("articleId") Long articleId, @Param("status") int status);
 }

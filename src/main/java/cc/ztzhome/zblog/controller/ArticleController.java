@@ -38,6 +38,18 @@ public class ArticleController {
         return articleService.getRandomArticles(page, pageSize);
     }
 
+    @GetMapping("/user/articles")
+    public ResponseModel<List<ArticleVo>> listUserArticles(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return articleService.listUserArticles(userId);
+    }
+
+    @DeleteMapping("/user/article/{articleId}")
+    public ResponseModel<Void> deleteArticle(@PathVariable Long articleId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return articleService.deleteArticle(userId, articleId);
+    }
+
     @GetMapping("/public/article/{articleId}")
     public ResponseModel<ArticleVo> getArticle(@PathVariable Long articleId) {
         return articleService.getArticle(articleId);

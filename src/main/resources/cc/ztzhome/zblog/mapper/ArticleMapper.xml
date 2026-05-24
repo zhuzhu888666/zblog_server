@@ -52,8 +52,16 @@
         SELECT * FROM tb_article WHERE status = 1 ORDER BY RAND() LIMIT #{limit} OFFSET #{offset}
     </select>
 
+    <select id="selectByUserId" resultMap="ArticleResultMap">
+        SELECT * FROM tb_article WHERE user_id = #{userId} AND status = 1 ORDER BY create_time DESC
+    </select>
+
     <update id="updateCoverKey">
         UPDATE tb_article SET cover_key = #{coverKey} WHERE article_id = #{articleId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE tb_article SET status = #{status} WHERE article_id = #{articleId}
     </update>
 
 </mapper>
