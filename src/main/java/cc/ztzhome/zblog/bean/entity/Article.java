@@ -13,6 +13,7 @@ public class Article {
     private String title;
     private String content;
     private String coverKey;
+    private String articleType = "other";
     private int status = 1;
     private LocalDateTime createTime = LocalDateTime.now();
     private LocalDateTime updateTime;

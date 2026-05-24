@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface IArticleService {
-    ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, MultipartFile cover);
+    ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, String articleType, MultipartFile cover);
 
     ResponseModel<List<ArticleVo>> listArticles();
 

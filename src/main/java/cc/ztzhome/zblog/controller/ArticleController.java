@@ -20,10 +20,11 @@ public class ArticleController {
     public ResponseModel<ArticleVo> createArticle(
             @RequestParam("title") String title,
             @RequestParam("content") String content,
+            @RequestParam(value = "articleType", required = false) String articleType,
             @RequestParam(value = "cover", required = false) MultipartFile cover,
             HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        return articleService.createArticle(userId, title, content, cover);
+        return articleService.createArticle(userId, title, content, articleType, cover);
     }
 
     @GetMapping("/public/article/list")

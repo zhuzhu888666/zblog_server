@@ -15,6 +15,7 @@ public class ArticleVo {
     private String title;
     private String content;
     private String coverUrl;
+    private String articleType;
     private int status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

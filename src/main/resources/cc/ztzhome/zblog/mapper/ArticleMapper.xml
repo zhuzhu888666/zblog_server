@@ -9,6 +9,7 @@
         <result property="title" column="title" />
         <result property="content" column="content" />
         <result property="coverKey" column="cover_key" />
+        <result property="articleType" column="article_type" />
         <result property="status" column="status" />
         <result property="createTime" column="create_time" />
         <result property="updateTime" column="update_time" />
@@ -21,6 +22,7 @@
             user_id,
             title,
             content,
+            article_type,
             status,
             create_time,
             <if test="coverKey != null and coverKey != ''">
@@ -32,6 +34,7 @@
             #{userId},
             #{title},
             #{content},
+            #{articleType},
             #{status},
             #{createTime},
             <if test="coverKey != null and coverKey != ''">

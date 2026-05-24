@@ -35,7 +35,7 @@ public class ArticleServiceImpl implements IArticleService {
     private RustFsService rustFsService;
 
     @Override
-    public ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, MultipartFile cover) {
+    public ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, String articleType, MultipartFile cover) {
         if (userId == null) {
             return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
         }
@@ -53,6 +53,10 @@ public class ArticleServiceImpl implements IArticleService {
         article.setUserId(userId);
         article.setTitle(title.trim());
         article.setContent(content.trim());
+
+        if (articleType != null && !articleType.isBlank()) {
+            article.setArticleType(articleType.trim());
+        }
 
         if (cover != null && !cover.isEmpty()) {
             String originalFilename = cover.getOriginalFilename();
@@ -166,6 +170,7 @@ public class ArticleServiceImpl implements IArticleService {
         vo.setUserId(article.getUserId());
         vo.setTitle(article.getTitle());
         vo.setContent(article.getContent());
+        vo.setArticleType(article.getArticleType());
         vo.setStatus(article.getStatus());
         vo.setCreateTime(article.getCreateTime());
         vo.setUpdateTime(article.getUpdateTime());
