@@ -8,8 +8,8 @@ public final class AppConstants {
     private AppConstants() {
     }
 
-    //普通临时Url过期时间->24小时
-    public static final long URL_TIMEOUT= 1000L*60*60*24;
+    //普通临时Url过期时间-->60分钟*24-->24小时
+    public static final long URL_TIMEOUT= 60*24;
 
     // ==================== 用户 ====================
 
@@ -39,4 +39,10 @@ public final class AppConstants {
 
     /** 轮播图片存放路径 */
     public static final String CAROUSEL_IMAGE = "image/carousel/";
+
+
+    /**======博客模块=======**/
+    public static final String ARTICLE_COVER_PATH="blog/article/cover";
+    public static final String ARTICLE_TEXT_PATH="blog/article/text";
+
 }

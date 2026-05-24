@@ -20,7 +20,7 @@ import java.io.IOException;
 @Service
 public class UserServiceImpl implements IUserService {
 
-    private static final long AVATAR_URL_TIMEOUT_MINUTES = AppConstants.URL_TIMEOUT / (60 * 1000);
+    private static final long AVATAR_URL_TIMEOUT_MINUTES = AppConstants.URL_TIMEOUT;
 
     @Autowired
     private UserMapper userMapper;

@@ -30,7 +30,7 @@ public class UserController {
         return userService.updateAvatar(userId, file);
     }
 
-    @GetMapping("/public/avatar/{userId}")
+    @GetMapping("/public/getAvatar/{userId}")
     public ResponseModel<String> getAvatarUrl(@PathVariable Long userId) {
         return userService.getAvatarUrl(userId);
     }

@@ -16,3 +16,18 @@ CREATE TABLE IF NOT EXISTS tb_user (
     PRIMARY KEY (user_id),
     UNIQUE KEY uk_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+
+-- tb_article 建表脚本
+CREATE TABLE IF NOT EXISTS tb_article (
+    article_id  BIGINT       NOT NULL AUTO_INCREMENT  COMMENT '文章ID',
+    user_id     BIGINT       NOT NULL                 COMMENT '作者用户ID',
+    title       VARCHAR(256) NOT NULL                 COMMENT '文章标题',
+    content     TEXT         NOT NULL                 COMMENT '文章正文',
+    cover_key   VARCHAR(512)          DEFAULT NULL    COMMENT '封面图片RustFS对象键',
+    status      INT          NOT NULL DEFAULT 1       COMMENT '状态 0-草稿 1-已发布',
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (article_id),
+    KEY idx_user_id (user_id),
+    KEY idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文章表';
