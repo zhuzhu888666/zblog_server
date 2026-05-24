@@ -30,6 +30,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 公开接口放行
                         .requestMatchers("/public/**","/api/public/**").permitAll()
+                        // 管理员接口需要管理员角色
+                        .requestMatchers("/admin/**","/api/admin/**").hasAuthority("ROLE_2")
                         // 其余所有接口需要认证
                         .anyRequest().authenticated()
                 )

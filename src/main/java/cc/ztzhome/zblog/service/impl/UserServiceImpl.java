@@ -3,6 +3,7 @@ package cc.ztzhome.zblog.service.impl;
 import cc.ztzhome.zblog.bean.dto.UpdateUserDto;
 import cc.ztzhome.zblog.bean.entity.User;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
+import cc.ztzhome.zblog.bean.vo.PageResult;
 import cc.ztzhome.zblog.bean.vo.UserVo;
 import cc.ztzhome.zblog.constant.AppConstants;
 import cc.ztzhome.zblog.mapper.UserMapper;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -154,5 +156,79 @@ public class UserServiceImpl implements IUserService {
         }
 
         return ResponseModel.success(avatarUrl);
+    }
+
+    @Override
+    public ResponseModel<PageResult<UserVo>> listUsersByPage(int page, int size) {
+        int offset = (page - 1) * size;
+        List<User> users = userMapper.selectByPage(offset, size);
+        long total = userMapper.countAll();
+        List<UserVo> vos = users.stream().map(this::toUserVo).toList();
+        return ResponseModel.success(new PageResult<>(vos, total, page, size));
+    }
+
+    @Override
+    public ResponseModel<UserVo> adminCreateUser(User user) {
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            return ResponseModel.error("邮箱不能为空");
+        }
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            return ResponseModel.error("密码不能为空");
+        }
+        if (userMapper.existsByEmail(user.getEmail())) {
+            return ResponseModel.error("该邮箱已被注册");
+        }
+        if (user.getNickname() == null || user.getNickname().isBlank()) {
+            user.setNickname("用户" + System.currentTimeMillis() % 100000);
+        }
+        if (user.getRole() == 0) {
+            user.setRole(1);
+        }
+        user.setCreateTime(java.time.LocalDateTime.now());
+        userMapper.insertUser(user);
+        User created = userMapper.selectById(user.getUserId());
+        return ResponseModel.success("用户创建成功", toUserVo(created));
+    }
+
+    @Override
+    public ResponseModel<UserVo> adminUpdateUser(User user) {
+        if (user.getUserId() == 0) {
+            return ResponseModel.error("用户ID不能为空");
+        }
+        User existing = userMapper.selectById(user.getUserId());
+        if (existing == null) {
+            return ResponseModel.error("用户不存在");
+        }
+        int result = userMapper.updateUser(user);
+        if (result <= 0) {
+            return ResponseModel.serverError();
+        }
+        User updated = userMapper.selectById(user.getUserId());
+        return ResponseModel.success("用户信息已更新", toUserVo(updated));
+    }
+
+    @Override
+    public ResponseModel<Void> adminDeleteUser(Long userId) {
+        if (userId == null) {
+            return ResponseModel.error("用户ID不能为空");
+        }
+        User existing = userMapper.selectById(userId);
+        if (existing == null) {
+            return ResponseModel.error("用户不存在");
+        }
+        userMapper.deleteById(userId);
+        return ResponseModel.success("用户已删除");
+    }
+
+    @Override
+    public ResponseModel<Void> adminBatchUpdateStatus(List<Long> userIds, Integer status) {
+        if (userIds == null || userIds.isEmpty()) {
+            return ResponseModel.error("请选择要操作的用户");
+        }
+        if (status == null || (status != 0 && status != 1)) {
+            return ResponseModel.error("状态值无效");
+        }
+        userMapper.batchUpdateStatus(userIds, status);
+        return ResponseModel.success("批量操作成功");
     }
 }

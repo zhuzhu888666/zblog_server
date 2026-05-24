@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -27,4 +28,18 @@ public interface UserMapper {
 
     //更新用户头像
     int updateAvatar(@Param("userId") Long userId, @Param("userAvatar") String userAvatar);
+
+    // ==================== 管理员功能 ====================
+
+    List<User> selectAll();
+
+    List<User> selectByPage(@Param("offset") int offset, @Param("limit") int limit);
+
+    long countAll();
+
+    int updateUser(User user);
+
+    int deleteById(@Param("userId") Long userId);
+
+    int batchUpdateStatus(@Param("userIds") List<Long> userIds, @Param("status") Integer status);
 }
