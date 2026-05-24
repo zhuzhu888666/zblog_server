@@ -96,6 +96,20 @@ public class ArticleServiceImpl implements IArticleService {
     }
 
     @Override
+    public ResponseModel<List<ArticleVo>> getRandomArticles(Integer page, Integer pageSize) {
+        int p = (page == null || page < 1) ? 1 : page;
+        int ps = (pageSize == null || pageSize < 1) ? 10 : pageSize;
+        int offset = (p - 1) * ps;
+
+        List<Article> articles = articleMapper.selectRandomPublishedList(offset, ps);
+        List<ArticleVo> voList = new ArrayList<>();
+        for (Article article : articles) {
+            voList.add(toArticleVo(article));
+        }
+        return ResponseModel.success(voList);
+    }
+
+    @Override
     public ResponseModel<ArticleVo> getArticle(Long articleId) {
         if (articleId == null) {
             return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "文章ID不能为空");

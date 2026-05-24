@@ -31,6 +31,13 @@ public class ArticleController {
         return articleService.listArticles();
     }
 
+    @GetMapping("/public/article/random")
+    public ResponseModel<List<ArticleVo>> getRandomArticles(
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        return articleService.getRandomArticles(page, pageSize);
+    }
+
     @GetMapping("/public/article/{articleId}")
     public ResponseModel<ArticleVo> getArticle(@PathVariable Long articleId) {
         return articleService.getArticle(articleId);

@@ -12,4 +12,6 @@ public interface IArticleService {
     ResponseModel<List<ArticleVo>> listArticles();
 
     ResponseModel<ArticleVo> getArticle(Long articleId);
+
+    ResponseModel<List<ArticleVo>> getRandomArticles(Integer page, Integer pageSize);
 }
