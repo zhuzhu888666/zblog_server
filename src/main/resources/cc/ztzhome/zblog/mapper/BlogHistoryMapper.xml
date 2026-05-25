@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.ztzhome.zblog.mapper.BlogHistoryMapper">
+
+    <resultMap id="BlogHistoryResultMap" type="cc.ztzhome.zblog.bean.entity.BlogHistory">
+        <id property="historyId" column="history_id" />
+        <result property="userId" column="user_id" />
+        <result property="articleId" column="article_id" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <insert id="insertOrUpdate" parameterType="cc.ztzhome.zblog.bean.entity.BlogHistory">
+        INSERT INTO tb_blog_history (user_id, article_id, create_time)
+        VALUES (#{userId}, #{articleId}, #{createTime})
+        ON DUPLICATE KEY UPDATE create_time = VALUES(create_time)
+    </insert>
+
+    <delete id="deleteByUserAndArticle">
+        DELETE FROM tb_blog_history WHERE user_id = #{userId} AND article_id = #{articleId}
+    </delete>
+
+    <delete id="deleteByUserId">
+        DELETE FROM tb_blog_history WHERE user_id = #{userId}
+    </delete>
+
+    <select id="selectByUserId" resultMap="BlogHistoryResultMap">
+        SELECT * FROM tb_blog_history WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+</mapper>

@@ -12,6 +12,8 @@ public interface CommentMapper {
 
     int deleteById(@Param("commentId") Long commentId);
 
+    int deleteByParentId(@Param("parentId") Long parentId);
+
     Comment selectById(@Param("commentId") Long commentId);
 
     List<Comment> selectByArticleId(@Param("articleId") Long articleId);

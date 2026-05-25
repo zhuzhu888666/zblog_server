@@ -23,6 +23,10 @@
         DELETE FROM tb_blog_comment WHERE comment_id = #{commentId}
     </delete>
 
+    <delete id="deleteByParentId">
+        DELETE FROM tb_blog_comment WHERE parent_id = #{parentId}
+    </delete>
+
     <select id="selectById" resultMap="CommentResultMap">
         SELECT * FROM tb_blog_comment WHERE comment_id = #{commentId}
     </select>

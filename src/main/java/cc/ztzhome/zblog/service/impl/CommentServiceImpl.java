@@ -108,6 +108,7 @@ public class CommentServiceImpl implements ICommentService {
         if (comment.getUserId() != userId) {
             return ResponseModel.error(ResponseModel.CODE_FORBIDDEN, "无权删除他人评论");
         }
+        commentMapper.deleteByParentId(commentId);
         commentMapper.deleteById(commentId);
         return ResponseModel.success("删除成功");
     }

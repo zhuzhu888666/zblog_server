@@ -11,6 +11,18 @@ CREATE TABLE IF NOT EXISTS tb_blog_favorite (
     KEY idx_article_id (article_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收藏表';
 
+-- tb_blog_history 建表脚本
+CREATE TABLE IF NOT EXISTS tb_blog_history (
+    history_id  BIGINT   NOT NULL AUTO_INCREMENT COMMENT '历史ID',
+    user_id     BIGINT   NOT NULL                COMMENT '用户ID',
+    article_id  BIGINT   NOT NULL                COMMENT '文章ID',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '浏览时间',
+    PRIMARY KEY (history_id),
+    UNIQUE KEY uk_user_article (user_id, article_id),
+    KEY idx_user_id (user_id),
+    KEY idx_article_id (article_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户浏览历史表';
+
 -- tb_music 建表脚本
 CREATE TABLE IF NOT EXISTS tb_music (
     music_id    BIGINT       NOT NULL AUTO_INCREMENT COMMENT '音乐ID',
