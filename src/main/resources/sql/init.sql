@@ -32,6 +32,21 @@ CREATE TABLE IF NOT EXISTS tb_music (
     KEY idx_create_time (create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='音乐表';
 
+-- tb_comment 建表脚本
+CREATE TABLE IF NOT EXISTS tb_blog_comment (
+    comment_id       BIGINT   NOT NULL AUTO_INCREMENT COMMENT '评论ID',
+    article_id       BIGINT   NOT NULL                COMMENT '文章ID',
+    user_id          BIGINT   NOT NULL                COMMENT '用户ID',
+    parent_id        BIGINT   DEFAULT NULL            COMMENT '父评论ID（NULL=顶级评论）',
+    reply_to_user_id BIGINT   DEFAULT NULL            COMMENT '被回复的用户ID',
+    content          TEXT     NOT NULL                COMMENT '评论内容',
+    create_time      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (comment_id),
+    KEY idx_article_id (article_id),
+    KEY idx_user_id (user_id),
+    KEY idx_parent_id (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客评论表';
+
 -- tb_music_favorite 建表脚本
 CREATE TABLE IF NOT EXISTS tb_music_favorite (
     favorite_id BIGINT   NOT NULL AUTO_INCREMENT COMMENT '收藏ID',
