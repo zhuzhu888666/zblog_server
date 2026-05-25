@@ -19,12 +19,13 @@ public class MusicController {
     public ResponseModel<MusicVo> uploadMusic(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "cover", required = false) MultipartFile cover,
+            @RequestParam(value = "lyric", required = false) MultipartFile lyric,
             @RequestParam("title") String title,
             @RequestParam(value = "artist", defaultValue = "") String artist,
             @RequestParam(value = "genre", defaultValue = "") String genre,
             @RequestParam(value = "duration", defaultValue = "00:00") String duration,
             @RequestParam(value = "releaseTime", defaultValue = "") String releaseTime) {
-        return musicService.uploadMusic(file, cover, title, artist, genre, duration,
+        return musicService.uploadMusic(file, cover, lyric, title, artist, genre, duration,
                 releaseTime.isEmpty() ? null : releaseTime);
     }
 
@@ -61,5 +62,16 @@ public class MusicController {
     @GetMapping("/music/song/url")
     public ResponseModel<MusicVo> getSongUrl(@RequestParam Long songId) {
         return musicService.getMusicById(songId);
+    }
+
+    @GetMapping("/music/lyric/{songId}")
+    public ResponseModel<String> getLyricContent(@PathVariable Long songId) {
+        return musicService.getLyricContent(songId);
+    }
+
+    @PostMapping("/admin/music/{id}/lyric")
+    public ResponseModel<MusicVo> uploadLyric(@PathVariable Long id,
+                                              @RequestParam("lyric") MultipartFile lyric) {
+        return musicService.uploadLyric(id, lyric);
     }
 }

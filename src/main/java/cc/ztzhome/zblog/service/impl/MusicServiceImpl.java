@@ -23,6 +23,7 @@ public class MusicServiceImpl implements IMusicService {
 
     private static final long MAX_MUSIC_SIZE = 50 * 1024 * 1024;
     private static final long MAX_COVER_SIZE = 10 * 1024 * 1024;
+    private static final long MAX_LYRIC_SIZE = 512 * 1024;
 
     @Autowired
     private MusicMapper musicMapper;
@@ -58,12 +59,11 @@ public class MusicServiceImpl implements IMusicService {
                 log.warn("Failed to generate presigned URL for cover key: {}", music.getCoverPath(), e);
             }
         }
-
         return vo;
     }
 
     @Override
-    public ResponseModel<MusicVo> uploadMusic(MultipartFile file, MultipartFile cover,
+    public ResponseModel<MusicVo> uploadMusic(MultipartFile file, MultipartFile cover, MultipartFile lyric,
                                               String title, String artist, String genre,
                                               String duration, String releaseTime) {
         if (file == null || file.isEmpty()) {
@@ -128,6 +128,24 @@ public class MusicServiceImpl implements IMusicService {
             }
         }
 
+        if (lyric != null && !lyric.isEmpty()) {
+            String lyricFilename = lyric.getOriginalFilename();
+            String lyricExt = FileTypeUtil.getFileExtension(lyricFilename).toLowerCase();
+            if (!"lrc".equals(lyricExt)) {
+                return ResponseModel.error("歌词文件格式不支持，仅支持 LRC 格式");
+            }
+            if (lyric.getSize() > MAX_LYRIC_SIZE) {
+                return ResponseModel.error("歌词文件大小不能超过 512KB");
+            }
+            String lyricPath = AppConstants.MUSIC_LYRIC_PATH + music.getMusicId() + title + ".lrc";
+            try {
+                rustFsService.upload(lyricPath, lyric.getInputStream(), lyric.getSize(), lyric.getContentType());
+                music.setLyricPath(lyricPath);
+            } catch (IOException e) {
+                log.error("Failed to upload lyric to RustFS", e);
+            }
+        }
+
         musicMapper.updateMusic(music);
 
         Music saved = musicMapper.selectById(music.getMusicId());
@@ -181,6 +199,13 @@ public class MusicServiceImpl implements IMusicService {
                 log.warn("Failed to delete cover object from RustFS: {}", music.getCoverPath(), e);
             }
         }
+        if (music.getLyricPath() != null && !music.getLyricPath().isEmpty()) {
+            try {
+                rustFsService.deleteObject(music.getLyricPath());
+            } catch (Exception e) {
+                log.warn("Failed to delete lyric object from RustFS: {}", music.getLyricPath(), e);
+            }
+        }
 
         musicMapper.deleteById(musicId);
         return ResponseModel.success("删除成功");
@@ -196,5 +221,74 @@ public class MusicServiceImpl implements IMusicService {
             return ResponseModel.notFound();
         }
         return ResponseModel.success(toMusicVo(music));
+    }
+
+    @Override
+    public ResponseModel<MusicVo> uploadLyric(Long musicId, MultipartFile lyric) {
+        if (musicId == null) {
+            return ResponseModel.error("音乐ID不能为空");
+        }
+        if (lyric == null || lyric.isEmpty()) {
+            return ResponseModel.error("请选择歌词文件");
+        }
+
+        Music music = musicMapper.selectById(musicId);
+        if (music == null) {
+            return ResponseModel.notFound();
+        }
+
+        String lyricFilename = lyric.getOriginalFilename();
+        String lyricExt = FileTypeUtil.getFileExtension(lyricFilename).toLowerCase();
+        if (!"lrc".equals(lyricExt)) {
+            return ResponseModel.error("歌词文件格式不支持，仅支持 LRC 格式");
+        }
+        if (lyric.getSize() > MAX_LYRIC_SIZE) {
+            return ResponseModel.error("歌词文件大小不能超过 512KB");
+        }
+
+        // Delete old lyric file if exists
+        if (music.getLyricPath() != null && !music.getLyricPath().isEmpty()) {
+            try {
+                rustFsService.deleteObject(music.getLyricPath());
+            } catch (Exception e) {
+                log.warn("Failed to delete old lyric from RustFS: {}", music.getLyricPath(), e);
+            }
+        }
+
+        String lyricPath = AppConstants.MUSIC_LYRIC_PATH + music.getMusicId() + music.getTitle() + ".lrc";
+        try {
+            rustFsService.upload(lyricPath, lyric.getInputStream(), lyric.getSize(), lyric.getContentType());
+        } catch (IOException e) {
+            log.error("Failed to upload lyric to RustFS", e);
+            return ResponseModel.serverError();
+        }
+
+        music.setLyricPath(lyricPath);
+        musicMapper.updateMusic(music);
+
+        Music updated = musicMapper.selectById(musicId);
+        return ResponseModel.success("歌词上传成功", toMusicVo(updated));
+    }
+
+    @Override
+    public ResponseModel<String> getLyricContent(Long musicId) {
+        if (musicId == null) {
+            return ResponseModel.error("音乐ID不能为空");
+        }
+        Music music = musicMapper.selectById(musicId);
+        if (music == null) {
+            return ResponseModel.notFound();
+        }
+        if (music.getLyricPath() == null || music.getLyricPath().isEmpty()) {
+            return ResponseModel.error("该歌曲暂无歌词");
+        }
+        try {
+            byte[] bytes = rustFsService.downloadAsBytes(music.getLyricPath());
+            String content = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+            return ResponseModel.success("操作成功", content);
+        } catch (Exception e) {
+            log.error("Failed to download lyric from RustFS: {}", music.getLyricPath(), e);
+            return ResponseModel.serverError();
+        }
     }
 }

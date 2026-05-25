@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface IMusicService {
     MusicVo toMusicVo(Music music);
 
-    ResponseModel<MusicVo> uploadMusic(MultipartFile file, MultipartFile cover,
+    ResponseModel<MusicVo> uploadMusic(MultipartFile file, MultipartFile cover, MultipartFile lyric,
                                        String title, String artist, String genre,
                                        String duration, String releaseTime);
 
@@ -20,4 +20,8 @@ public interface IMusicService {
     ResponseModel<Void> deleteMusic(Long musicId);
 
     ResponseModel<MusicVo> getMusicById(Long musicId);
+
+    ResponseModel<MusicVo> uploadLyric(Long musicId, MultipartFile lyric);
+
+    ResponseModel<String> getLyricContent(Long musicId);
 }

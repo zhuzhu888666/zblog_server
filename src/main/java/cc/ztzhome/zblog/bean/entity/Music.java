@@ -15,6 +15,7 @@ public class Music {
     private String duration;
     private String filePath;
     private String coverPath;
+    private String lyricPath;
     private String genre;
     private LocalDateTime releaseTime;
     private LocalDateTime createTime;
