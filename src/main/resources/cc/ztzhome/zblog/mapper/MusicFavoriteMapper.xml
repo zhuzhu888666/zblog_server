@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.ztzhome.zblog.mapper.MusicFavoriteMapper">
+
+    <resultMap id="MusicFavoriteResultMap" type="cc.ztzhome.zblog.bean.entity.MusicFavorite">
+        <id property="favoriteId" column="favorite_id" />
+        <result property="userId" column="user_id" />
+        <result property="musicId" column="music_id" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <insert id="insert" parameterType="cc.ztzhome.zblog.bean.entity.MusicFavorite"
+            useGeneratedKeys="true" keyProperty="favoriteId">
+        INSERT INTO tb_music_favorite (user_id, music_id, create_time)
+        VALUES (#{userId}, #{musicId}, #{createTime})
+    </insert>
+
+    <delete id="deleteByUserAndMusic">
+        DELETE FROM tb_music_favorite WHERE user_id = #{userId} AND music_id = #{musicId}
+    </delete>
+
+    <select id="selectByUserAndMusic" resultMap="MusicFavoriteResultMap">
+        SELECT * FROM tb_music_favorite WHERE user_id = #{userId} AND music_id = #{musicId}
+    </select>
+
+    <select id="selectByUserId" resultMap="MusicFavoriteResultMap">
+        SELECT * FROM tb_music_favorite WHERE user_id = #{userId} ORDER BY create_time DESC
+    </select>
+
+    <select id="countByMusicId" resultType="int">
+        SELECT COUNT(*) FROM tb_music_favorite WHERE music_id = #{musicId}
+    </select>
+
+    <select id="countByUserId" resultType="int">
+        SELECT COUNT(*) FROM tb_music_favorite WHERE user_id = #{userId}
+    </select>
+
+</mapper>

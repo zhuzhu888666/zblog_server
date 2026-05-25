@@ -31,3 +31,15 @@ CREATE TABLE IF NOT EXISTS tb_music (
     KEY idx_genre (genre),
     KEY idx_create_time (create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='音乐表';
+
+-- tb_music_favorite 建表脚本
+CREATE TABLE IF NOT EXISTS tb_music_favorite (
+    favorite_id BIGINT   NOT NULL AUTO_INCREMENT COMMENT '收藏ID',
+    user_id     BIGINT   NOT NULL                COMMENT '用户ID',
+    music_id    BIGINT   NOT NULL                COMMENT '音乐ID',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
+    PRIMARY KEY (favorite_id),
+    UNIQUE KEY uk_user_music (user_id, music_id),
+    KEY idx_user_id (user_id),
+    KEY idx_music_id (music_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='音乐收藏表';
