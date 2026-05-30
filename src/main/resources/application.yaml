@@ -5,10 +5,31 @@ server:
 spring:
   application:
     name: zblog_server
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  ai:
+    deepseek:
+      api-key: your_actual_api_key_here # 👈 必须填写，不能留空
+      # 可选配置...
+      chat:
+        model:
+    dashscope:
+      api-key: # 从环境变量读取，或直接填入你的密钥
+        chat:
+          options:
+            model: qwen-plus
+            temperature: 0.7    # 控制回答的随机性 (0-1)，值越大越有创意
+    openai:
+      api-key: sk-你的真实OpenAI密钥   # 或者如果是DeepSeek，可能需要配置base-url
+      # 如果使用的是 DeepSeek 而非 OpenAI，通常还需要修改 base-url
+      base-url: https://api.deepseek.com/v1   # DeepSeek 示例
+
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver   # MySQL 8 驱动，若为 MySQL 5 可改为 com.mysql.jdbc.Driver
-    url: jdbc:mysql://your_adress:3306/zblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    url: jdbc:mysql://yourDb:3306/zblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
     username:                          # 替换为你的数据库用户名
     password:              # 替换为你的数据库密码
     # HikariCP 连接池配置（Spring Boot 默认）
@@ -61,7 +82,7 @@ jwt:
 
 # RustFS 对象存储配置（S3 兼容）
 rustfs:
-  endpoint: http://127.0.0.1:9000    # RustFS 服务端点地址
-  access-key: your-access-key         # 访问密钥
-  secret-key: your-secret-key         # 私密密钥
+  endpoint: http://192.168.217.128:9000    # RustFS 服务端点地址
+  access-key: rustfsadmin        # 访问密钥
+  secret-key: rustfsadmin         # 私密密钥
   bucket: zblog                       # 存储桶名称
