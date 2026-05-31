@@ -35,4 +35,10 @@ public class AuthController {
         Long userId = (Long) request.getAttribute("userId");
         return authService.changePassword(userId, dto.getOldPassword(), dto.getNewPassword());
     }
+
+    @PostMapping("/user/logout")
+    public ResponseModel<Void> logout(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return authService.logout(userId);
+    }
 }

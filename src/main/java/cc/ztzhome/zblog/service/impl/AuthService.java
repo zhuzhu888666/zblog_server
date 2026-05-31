@@ -11,11 +11,14 @@ import cc.ztzhome.zblog.service.IAuthService;
 import cc.ztzhome.zblog.service.IUserService;
 import cc.ztzhome.zblog.utils.BCryptUtil;
 import cc.ztzhome.zblog.utils.JwtUtil;
+import cc.ztzhome.zblog.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService implements IAuthService {
+
+    private static final String TOKEN_PREFIX = "token:user:";
 
     @Autowired
     private UserMapper userMapper;
@@ -25,6 +28,9 @@ public class AuthService implements IAuthService {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Override
     public ResponseModel<LoginVo> userLogin(LoginDto loginDto) {
@@ -46,6 +52,8 @@ public class AuthService implements IAuthService {
 
         boolean isRememberMe = loginDto.getIsLongLogin() == 1;
         String token = jwtUtil.generateToken(user.getUserId(), String.valueOf(user.getRole()), isRememberMe);
+
+        storeToken(user.getUserId(), token);
 
         UserVo userVo = userService.toUserVo(user);
 
@@ -135,6 +143,8 @@ public class AuthService implements IAuthService {
 
         String token = jwtUtil.generateToken(user.getUserId(), String.valueOf(user.getRole()));
 
+        storeToken(user.getUserId(), token);
+
         UserVo userVo = userService.toUserVo(user);
 
         LoginVo loginVo = new LoginVo();
@@ -142,5 +152,21 @@ public class AuthService implements IAuthService {
         loginVo.setUserVo(userVo);
 
         return ResponseModel.success("注册成功", loginVo);
+    }
+
+    @Override
+    public ResponseModel<Void> logout(Long userId) {
+        if (userId == null) {
+            return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
+        }
+        redisUtil.delete(TOKEN_PREFIX + userId);
+        return ResponseModel.success("已退出登录");
+    }
+
+    private void storeToken(Long userId, String token) {
+        long ttlSeconds = jwtUtil.getRemainingTime(token) / 1000;
+        if (ttlSeconds > 0) {
+            redisUtil.set(TOKEN_PREFIX + userId, token, ttlSeconds);
+        }
     }
 }

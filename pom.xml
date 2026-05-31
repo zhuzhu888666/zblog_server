@@ -172,6 +172,17 @@
             <version>3.5.15</version>
         </dependency>
 
+        <!--redis依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- 连接池依赖（强烈建议添加） -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+        </dependency>
+
         <!-- AWS S3 SDK，用于对接 RustFs（兼容 S3 协议的对象存储） -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>

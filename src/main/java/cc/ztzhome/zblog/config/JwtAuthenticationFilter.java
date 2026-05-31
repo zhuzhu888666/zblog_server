@@ -1,6 +1,7 @@
 package cc.ztzhome.zblog.config;
 
 import cc.ztzhome.zblog.utils.JwtUtil;
+import cc.ztzhome.zblog.utils.RedisUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +21,13 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String TOKEN_PREFIX = "token:user:";
+
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -34,6 +40,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtUtil.validateToken(token)) {
                     Long userId = jwtUtil.getUserId(token);
                     String role = jwtUtil.getRole(token);
+
+                    // 检查 token 在 Redis 中是否存在（被踢下线则不存在）
+                    // Redis 不可用时降级为仅 JWT 校验，避免阻塞所有请求
+                    try {
+                        String redisKey = TOKEN_PREFIX + userId;
+                        String storedToken = (String) redisUtil.get(redisKey);
+                        if (storedToken == null || !storedToken.equals(token)) {
+                            filterChain.doFilter(request, response);
+                            return;
+                        }
+                    } catch (Exception e) {
+                        log.warn("Redis 不可用，降级为仅 JWT 校验: {}", e.getMessage());
+                    }
 
                     List<SimpleGrantedAuthority> authorities =
                             List.of(new SimpleGrantedAuthority("ROLE_" + role));

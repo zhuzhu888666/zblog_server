@@ -11,4 +11,6 @@ public interface IAuthService {
     ResponseModel<LoginVo> userRegister(RegisterDto rDto);
 
     ResponseModel<Void> changePassword(Long userId, String oldPassword, String newPassword);
+
+    ResponseModel<Void> logout(Long userId);
 }
