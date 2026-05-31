@@ -14,18 +14,13 @@ spring:
       api-key: your_actual_api_key_here # 👈 必须填写，不能留空
       # 可选配置...
       chat:
-        model:
-    dashscope:
-      api-key: # 从环境变量读取，或直接填入你的密钥
-        chat:
-          options:
-            model: qwen-plus
-            temperature: 0.7    # 控制回答的随机性 (0-1)，值越大越有创意
+        model:deepseek-v4-flash
     openai:
-      api-key: sk-你的真实OpenAI密钥   # 或者如果是DeepSeek，可能需要配置base-url
-      # 如果使用的是 DeepSeek 而非 OpenAI，通常还需要修改 base-url
-      base-url: https://api.deepseek.com/v1   # DeepSeek 示例
-
+      api-key:    # 从模型官网获取
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1   #接口地址
+      chat:
+        options:
+          model: qwen-plus   # 指定使用的模型
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver   # MySQL 8 驱动，若为 MySQL 5 可改为 com.mysql.jdbc.Driver
