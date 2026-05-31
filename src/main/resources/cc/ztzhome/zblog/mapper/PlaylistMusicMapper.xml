@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.ztzhome.zblog.mapper.PlaylistMusicMapper">
+
+    <resultMap id="PlaylistMusicResultMap" type="cc.ztzhome.zblog.bean.entity.PlaylistMusic">
+        <id property="id" column="id" />
+        <result property="playlistId" column="playlist_id" />
+        <result property="musicId" column="music_id" />
+        <result property="sortOrder" column="sort_order" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <insert id="insert" parameterType="cc.ztzhome.zblog.bean.entity.PlaylistMusic"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tb_playlist_music (playlist_id, music_id, sort_order, create_time)
+        VALUES (#{playlistId}, #{musicId}, #{sortOrder}, #{createTime})
+    </insert>
+
+    <delete id="deleteByPlaylistAndMusic">
+        DELETE FROM tb_playlist_music WHERE playlist_id = #{playlistId} AND music_id = #{musicId}
+    </delete>
+
+    <select id="selectByPlaylistAndMusic" resultMap="PlaylistMusicResultMap">
+        SELECT * FROM tb_playlist_music WHERE playlist_id = #{playlistId} AND music_id = #{musicId}
+    </select>
+
+    <delete id="deleteByPlaylistId">
+        DELETE FROM tb_playlist_music WHERE playlist_id = #{playlistId}
+    </delete>
+
+    <select id="selectMusicIdsByPlaylistId" resultType="long">
+        SELECT music_id FROM tb_playlist_music WHERE playlist_id = #{playlistId} ORDER BY sort_order ASC
+    </select>
+
+    <select id="countByPlaylistId" resultType="int">
+        SELECT COUNT(*) FROM tb_playlist_music WHERE playlist_id = #{playlistId}
+    </select>
+
+    <select id="selectMaxSortOrder" resultType="int">
+        SELECT MAX(sort_order) FROM tb_playlist_music WHERE playlist_id = #{playlistId}
+    </select>
+
+</mapper>

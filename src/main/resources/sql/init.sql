@@ -93,6 +93,33 @@ CREATE TABLE IF NOT EXISTS tb_chat_conversation (
     KEY idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI聊天会话表';
 
+-- tb_playlist 建表脚本
+CREATE TABLE IF NOT EXISTS tb_playlist (
+    playlist_id BIGINT       NOT NULL AUTO_INCREMENT COMMENT '歌单ID',
+    user_id     BIGINT       NOT NULL                COMMENT '所有者用户ID',
+    name        VARCHAR(128) NOT NULL                COMMENT '歌单名称',
+    description VARCHAR(512) NOT NULL DEFAULT ''     COMMENT '歌单描述',
+    cover_path  VARCHAR(512) NOT NULL DEFAULT ''     COMMENT '封面存储路径',
+    create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted     TINYINT(1)  NOT NULL DEFAULT 0       COMMENT '逻辑删除标记（0=正常, 1=已删除）',
+    PRIMARY KEY (playlist_id),
+    KEY idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='歌单表';
+
+-- tb_playlist_music 建表脚本
+CREATE TABLE IF NOT EXISTS tb_playlist_music (
+    id          BIGINT   NOT NULL AUTO_INCREMENT COMMENT '关联ID',
+    playlist_id BIGINT   NOT NULL                COMMENT '歌单ID',
+    music_id    BIGINT   NOT NULL                COMMENT '音乐ID',
+    sort_order  INT      NOT NULL DEFAULT 0       COMMENT '排序序号',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '添加时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_playlist_music (playlist_id, music_id),
+    KEY idx_playlist_id (playlist_id),
+    KEY idx_music_id (music_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='歌单歌曲关联表';
+
 -- tb_chat_message 建表脚本
 CREATE TABLE IF NOT EXISTS tb_chat_message (
     message_id      BIGINT   NOT NULL AUTO_INCREMENT COMMENT '消息ID',
