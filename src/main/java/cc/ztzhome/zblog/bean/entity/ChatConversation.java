@@ -12,5 +12,5 @@ public class ChatConversation {
     private Long userId;
     private String title;
     private LocalDateTime createTime = LocalDateTime.now();
-    private LocalDateTime updateTime;
+    private LocalDateTime updateTime = LocalDateTime.now();
 }

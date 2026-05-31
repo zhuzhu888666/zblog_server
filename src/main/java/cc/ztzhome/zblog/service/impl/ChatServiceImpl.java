@@ -17,7 +17,6 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ public class ChatServiceImpl implements IChatService {
     private ChatMessageMapper chatMessageMapper;
 
     @Autowired
-    @Qualifier("deepseekChatModel")
     private ChatModel chatModel;
 
     @Override
