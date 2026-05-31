@@ -70,3 +70,25 @@ CREATE TABLE IF NOT EXISTS tb_music_favorite (
     KEY idx_user_id (user_id),
     KEY idx_music_id (music_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='音乐收藏表';
+
+-- tb_chat_conversation 建表脚本
+CREATE TABLE IF NOT EXISTS tb_chat_conversation (
+    conversation_id BIGINT   NOT NULL AUTO_INCREMENT COMMENT '会话ID',
+    user_id         BIGINT   NOT NULL                COMMENT '用户ID',
+    title           VARCHAR(256) NOT NULL DEFAULT '' COMMENT '会话标题',
+    create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (conversation_id),
+    KEY idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI聊天会话表';
+
+-- tb_chat_message 建表脚本
+CREATE TABLE IF NOT EXISTS tb_chat_message (
+    message_id      BIGINT   NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+    conversation_id BIGINT   NOT NULL                COMMENT '会话ID',
+    role            VARCHAR(16) NOT NULL             COMMENT '角色: user | assistant',
+    content         TEXT     NOT NULL                COMMENT '消息内容',
+    create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (message_id),
+    KEY idx_conversation_id (conversation_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI聊天消息表';

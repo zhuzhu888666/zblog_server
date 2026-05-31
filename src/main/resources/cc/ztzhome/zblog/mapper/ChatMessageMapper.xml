@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.ztzhome.zblog.mapper.ChatMessageMapper">
+
+    <resultMap id="MessageResultMap" type="cc.ztzhome.zblog.bean.entity.ChatMessageEntity">
+        <id property="messageId" column="message_id" />
+        <result property="conversationId" column="conversation_id" />
+        <result property="role" column="role" />
+        <result property="content" column="content" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <insert id="insert" parameterType="cc.ztzhome.zblog.bean.entity.ChatMessageEntity"
+            useGeneratedKeys="true" keyProperty="messageId">
+        INSERT INTO tb_chat_message (conversation_id, role, content, create_time)
+        VALUES (#{conversationId}, #{role}, #{content}, #{createTime})
+    </insert>
+
+    <select id="selectByConversationId" resultMap="MessageResultMap">
+        SELECT * FROM tb_chat_message
+        WHERE conversation_id = #{conversationId}
+        ORDER BY create_time ASC
+    </select>
+
+    <delete id="deleteByConversationId">
+        DELETE FROM tb_chat_message WHERE conversation_id = #{conversationId}
+    </delete>
+
+</mapper>
