@@ -44,6 +44,7 @@ public class MusicServiceImpl implements IMusicService {
         vo.setReleaseTime(music.getReleaseTime());
         vo.setCreateTime(music.getCreateTime());
         vo.setUpdateTime(music.getUpdateTime());
+        vo.setFavoriteCount(music.getFavoriteCount());
 
         if (music.getFilePath() != null && !music.getFilePath().isEmpty()) {
             try {
@@ -268,6 +269,15 @@ public class MusicServiceImpl implements IMusicService {
 
         Music updated = musicMapper.selectById(musicId);
         return ResponseModel.success("歌词上传成功", toMusicVo(updated));
+    }
+
+    @Override
+    public ResponseModel<PageResult<MusicVo>> getFavoriteRanking(int page, int size) {
+        int offset = (page - 1) * size;
+        List<Music> records = musicMapper.selectFavoriteRanking(offset, size);
+        long total = musicMapper.countFavoriteRanking();
+        List<MusicVo> vos = records.stream().map(this::toMusicVo).toList();
+        return ResponseModel.success(new PageResult<>(vos, total, page, size));
     }
 
     @Override

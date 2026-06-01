@@ -74,4 +74,11 @@ public class MusicController {
                                               @RequestParam("lyric") MultipartFile lyric) {
         return musicService.uploadLyric(id, lyric);
     }
+
+    @GetMapping("/public/music/ranking")
+    public ResponseModel<PageResult<MusicVo>> getFavoriteRanking(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return musicService.getFavoriteRanking(page, size);
+    }
 }

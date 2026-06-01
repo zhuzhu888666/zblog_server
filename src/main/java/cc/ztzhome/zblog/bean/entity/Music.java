@@ -21,4 +21,5 @@ public class Music {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private int deleted;
+    private Long favoriteCount;
 }

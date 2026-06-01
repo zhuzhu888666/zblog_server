@@ -24,4 +24,6 @@ public interface IMusicService {
     ResponseModel<MusicVo> uploadLyric(Long musicId, MultipartFile lyric);
 
     ResponseModel<String> getLyricContent(Long musicId);
+
+    ResponseModel<PageResult<MusicVo>> getFavoriteRanking(int page, int size);
 }

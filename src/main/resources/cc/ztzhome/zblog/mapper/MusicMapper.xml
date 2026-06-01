@@ -56,4 +56,25 @@
         UPDATE tb_music SET deleted = 1 WHERE music_id = #{musicId}
     </update>
 
+    <resultMap id="MusicWithFavoriteCountResultMap" type="cc.ztzhome.zblog.bean.entity.Music" extends="MusicResultMap">
+        <result column="favorite_count" property="favoriteCount"/>
+    </resultMap>
+
+    <select id="selectFavoriteRanking" resultMap="MusicWithFavoriteCountResultMap">
+        SELECT m.*, COUNT(f.music_id) AS favorite_count
+        FROM tb_music m
+        INNER JOIN tb_music_favorite f ON m.music_id = f.music_id
+        WHERE m.deleted = 0
+        GROUP BY m.music_id
+        ORDER BY favorite_count DESC, m.music_id ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countFavoriteRanking" resultType="long">
+        SELECT COUNT(DISTINCT m.music_id)
+        FROM tb_music m
+        INNER JOIN tb_music_favorite f ON m.music_id = f.music_id
+        WHERE m.deleted = 0
+    </select>
+
 </mapper>

@@ -19,4 +19,5 @@ public class MusicVo {
     private LocalDateTime releaseTime;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long favoriteCount;
 }

@@ -19,4 +19,8 @@ public interface MusicMapper {
     int updateMusic(Music music);
 
     int deleteById(@Param("musicId") Long musicId);
+
+    List<Music> selectFavoriteRanking(@Param("offset") int offset, @Param("limit") int limit);
+
+    long countFavoriteRanking();
 }
