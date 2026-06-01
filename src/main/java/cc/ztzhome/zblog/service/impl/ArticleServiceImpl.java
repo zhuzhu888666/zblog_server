@@ -1,9 +1,11 @@
 package cc.ztzhome.zblog.service.impl;
 
+import cc.ztzhome.zblog.bean.dto.BatchArticleDto;
 import cc.ztzhome.zblog.bean.entity.Article;
 import cc.ztzhome.zblog.bean.entity.User;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.ArticleVo;
+import cc.ztzhome.zblog.bean.vo.PageResult;
 import cc.ztzhome.zblog.constant.AppConstants;
 import cc.ztzhome.zblog.mapper.ArticleMapper;
 import cc.ztzhome.zblog.mapper.UserMapper;
@@ -162,6 +164,81 @@ public class ArticleServiceImpl implements IArticleService {
             return ResponseModel.notFound();
         }
         return ResponseModel.success(toArticleVo(article));
+    }
+
+    @Override
+    public ResponseModel<PageResult<ArticleVo>> listArticles(int page, int size, String keyword, Integer status) {
+        int p = Math.max(page, 1);
+        int s = Math.max(size, 1);
+        int offset = (p - 1) * s;
+
+        List<Article> records = articleMapper.selectByPageWithFilter(offset, s, keyword, status);
+        long total = articleMapper.countWithFilter(keyword, status);
+        List<ArticleVo> vos = records.stream().map(this::toArticleVo).toList();
+        return ResponseModel.success(new PageResult<>(vos, total, p, s));
+    }
+
+    @Override
+    public ResponseModel<ArticleVo> adminUpdateArticle(Long articleId, Article article) {
+        if (articleId == null) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "文章ID不能为空");
+        }
+        Article existing = articleMapper.selectById(articleId);
+        if (existing == null) {
+            return ResponseModel.notFound();
+        }
+        article.setArticleId(articleId);
+        articleMapper.updateArticle(article);
+        Article updated = articleMapper.selectById(articleId);
+        return ResponseModel.success("更新成功", toArticleVo(updated));
+    }
+
+    @Override
+    public ResponseModel<Void> adminDeleteArticle(Long articleId) {
+        if (articleId == null) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "文章ID不能为空");
+        }
+        Article article = articleMapper.selectById(articleId);
+        if (article == null) {
+            return ResponseModel.notFound();
+        }
+        articleMapper.updateStatus(articleId, 0);
+        if (article.getCoverKey() != null && !article.getCoverKey().isEmpty()) {
+            try {
+                rustFsService.deleteObject(article.getCoverKey());
+            } catch (Exception e) {
+                log.warn("Failed to delete cover from RustFS: {}", article.getCoverKey(), e);
+            }
+        }
+        return ResponseModel.success("删除成功");
+    }
+
+    @Override
+    public ResponseModel<Void> adminBatchUpdateArticles(BatchArticleDto dto) {
+        if (dto.getArticleIds() == null || dto.getArticleIds().isEmpty()) {
+            return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "请选择至少一篇文章");
+        }
+        if (dto.getStatus() != null) {
+            for (Long articleId : dto.getArticleIds()) {
+                articleMapper.updateStatus(articleId, dto.getStatus());
+            }
+            return ResponseModel.success("批量操作成功");
+        } else {
+            for (Long articleId : dto.getArticleIds()) {
+                Article article = articleMapper.selectById(articleId);
+                if (article != null) {
+                    articleMapper.updateStatus(articleId, 0);
+                    if (article.getCoverKey() != null && !article.getCoverKey().isEmpty()) {
+                        try {
+                            rustFsService.deleteObject(article.getCoverKey());
+                        } catch (Exception e) {
+                            log.warn("Failed to delete cover from RustFS: {}", article.getCoverKey(), e);
+                        }
+                    }
+                }
+            }
+            return ResponseModel.success("批量删除成功");
+        }
     }
 
     private ArticleVo toArticleVo(Article article) {

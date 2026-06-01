@@ -1,9 +1,13 @@
 package cc.ztzhome.zblog.controller;
 
+import cc.ztzhome.zblog.bean.dto.BatchArticleDto;
+import cc.ztzhome.zblog.bean.entity.Article;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.ArticleVo;
+import cc.ztzhome.zblog.bean.vo.PageResult;
 import cc.ztzhome.zblog.service.IArticleService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,5 +58,34 @@ public class ArticleController {
     @GetMapping("/public/article/{articleId}")
     public ResponseModel<ArticleVo> getArticle(@PathVariable Long articleId) {
         return articleService.getArticle(articleId);
+    }
+
+    @GetMapping("/admin/articles")
+    public ResponseModel<PageResult<ArticleVo>> listArticles(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer status) {
+        return articleService.listArticles(page, size, keyword, status);
+    }
+
+    @GetMapping("/admin/articles/{id}")
+    public ResponseModel<ArticleVo> getArticleAdmin(@PathVariable Long id) {
+        return articleService.getArticle(id);
+    }
+
+    @PutMapping("/admin/articles/{id}")
+    public ResponseModel<ArticleVo> updateArticle(@PathVariable Long id, @RequestBody Article article) {
+        return articleService.adminUpdateArticle(id, article);
+    }
+
+    @DeleteMapping("/admin/articles/{id}")
+    public ResponseModel<Void> deleteArticleAdmin(@PathVariable Long id) {
+        return articleService.adminDeleteArticle(id);
+    }
+
+    @PutMapping("/admin/articles/batch")
+    public ResponseModel<Void> batchUpdateArticles(@Valid @RequestBody BatchArticleDto dto) {
+        return articleService.adminBatchUpdateArticles(dto);
     }
 }

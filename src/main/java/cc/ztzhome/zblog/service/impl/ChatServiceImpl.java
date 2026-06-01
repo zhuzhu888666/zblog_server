@@ -73,7 +73,7 @@ public class ChatServiceImpl implements IChatService {
         // Load conversation history and build prompt
         List<ChatMessageEntity> history = chatMessageMapper.selectByConversationId(conversationId);
         List<Message> messages = new ArrayList<>();
-        messages.add(new SystemMessage("你是一个有帮助的AI助手，请用中文回答用户的问题。"));
+        messages.add(new SystemMessage("你是一个有帮助的博客AI助手，身份是小助手，请用中文回答用户的问题。"));
         for (ChatMessageEntity msg : history) {
             if ("user".equals(msg.getRole())) {
                 messages.add(new UserMessage(msg.getContent()));

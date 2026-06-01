@@ -67,4 +67,42 @@
         UPDATE tb_article SET status = #{status} WHERE article_id = #{articleId}
     </update>
 
+    <select id="selectByPageWithFilter" resultMap="ArticleResultMap">
+        SELECT * FROM tb_article
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countWithFilter" resultType="long">
+        SELECT COUNT(*) FROM tb_article
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateArticle">
+        UPDATE tb_article
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="articleType != null">article_type = #{articleType},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE article_id = #{articleId}
+    </update>
+
 </mapper>

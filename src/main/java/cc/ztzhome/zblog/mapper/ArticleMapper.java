@@ -21,4 +21,11 @@ public interface ArticleMapper {
     int updateCoverKey(@Param("articleId") Long articleId, @Param("coverKey") String coverKey);
 
     int updateStatus(@Param("articleId") Long articleId, @Param("status") int status);
+
+    List<Article> selectByPageWithFilter(@Param("offset") int offset, @Param("limit") int limit,
+                                         @Param("keyword") String keyword, @Param("status") Integer status);
+
+    long countWithFilter(@Param("keyword") String keyword, @Param("status") Integer status);
+
+    int updateArticle(Article article);
 }

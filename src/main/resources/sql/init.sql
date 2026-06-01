@@ -1,132 +1,227 @@
+create table tb_article
+(
+    article_id   bigint auto_increment comment '文章ID'
+        primary key,
+    user_id      bigint                                not null comment '作者用户ID',
+    title        varchar(256)                          not null comment '文章标题',
+    content      text                                  not null comment '文章正文',
+    article_type varchar(32) default 'other'           not null comment '文章类型: tech-技术, life-生活, essay-随笔, notes-笔记, other-其他',
+    cover_key    varchar(512)                          null comment '封面图片RustFS对象键',
+    status       int         default 1                 not null comment '状态 0-草稿 1-已发布',
+    create_time  datetime    default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time  datetime    default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间'
+)
+    comment '文章表' collate = utf8mb4_unicode_ci;
 
--- tb_blog_favorite 建表脚本
-CREATE TABLE IF NOT EXISTS tb_blog_favorite (
-    favorite_id BIGINT   NOT NULL AUTO_INCREMENT COMMENT '收藏ID',
-    user_id     BIGINT   NOT NULL                COMMENT '用户ID',
-    article_id  BIGINT   NOT NULL                COMMENT '文章ID',
-    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
-    PRIMARY KEY (favorite_id),
-    UNIQUE KEY uk_user_article (user_id, article_id),
-    KEY idx_user_id (user_id),
-    KEY idx_article_id (article_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收藏表';
+create index idx_create_time
+    on tb_article (create_time);
 
--- tb_blog_history 建表脚本
-CREATE TABLE IF NOT EXISTS tb_blog_history (
-    history_id  BIGINT   NOT NULL AUTO_INCREMENT COMMENT '历史ID',
-    user_id     BIGINT   NOT NULL                COMMENT '用户ID',
-    article_id  BIGINT   NOT NULL                COMMENT '文章ID',
-    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '浏览时间',
-    PRIMARY KEY (history_id),
-    UNIQUE KEY uk_user_article (user_id, article_id),
-    KEY idx_user_id (user_id),
-    KEY idx_article_id (article_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户浏览历史表';
+create index idx_user_id
+    on tb_article (user_id);
 
--- tb_music 建表脚本
-CREATE TABLE IF NOT EXISTS tb_music (
-    music_id    BIGINT       NOT NULL AUTO_INCREMENT COMMENT '音乐ID',
-    title       VARCHAR(256) NOT NULL                COMMENT '歌曲标题',
-    artist_id   BIGINT       NOT NULL DEFAULT 0      COMMENT '歌手ID（0=直接使用artist字段）',
-    artist      VARCHAR(128) NOT NULL DEFAULT ''     COMMENT '歌手名称',
-    duration    VARCHAR(16)  NOT NULL DEFAULT '00:00' COMMENT '时长（格式 mm:ss）',
-    file_path   VARCHAR(512) NOT NULL DEFAULT ''     COMMENT 'RustFS 音乐文件存储路径',
-    cover_path  VARCHAR(512) NOT NULL DEFAULT ''     COMMENT 'RustFS 封面图片存储路径',
-    genre       VARCHAR(64)  NOT NULL DEFAULT ''     COMMENT '音乐流派',
-    release_time DATETIME   DEFAULT NULL             COMMENT '发行时间',
-    create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted     TINYINT(1)  NOT NULL DEFAULT 0       COMMENT '逻辑删除标记（0=正常, 1=已删除）',
-    PRIMARY KEY (music_id),
-    KEY idx_title (title),
-    KEY idx_artist (artist),
-    KEY idx_genre (genre),
-    KEY idx_create_time (create_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='音乐表';
+create table tb_blog_comment
+(
+    comment_id       bigint auto_increment comment '评论ID'
+        primary key,
+    article_id       bigint                             not null comment '文章ID',
+    user_id          bigint                             not null comment '用户ID',
+    parent_id        bigint                             null comment '父评论ID（NULL=顶级评论）',
+    reply_to_user_id bigint                             null comment '被回复的用户ID',
+    content          text                               not null comment '评论内容',
+    create_time      datetime default CURRENT_TIMESTAMP not null comment '创建时间'
+)
+    comment '博客评论表' collate = utf8mb4_unicode_ci;
 
--- tb_comment 建表脚本
-CREATE TABLE IF NOT EXISTS tb_blog_comment (
-    comment_id       BIGINT   NOT NULL AUTO_INCREMENT COMMENT '评论ID',
-    article_id       BIGINT   NOT NULL                COMMENT '文章ID',
-    user_id          BIGINT   NOT NULL                COMMENT '用户ID',
-    parent_id        BIGINT   DEFAULT NULL            COMMENT '父评论ID（NULL=顶级评论）',
-    reply_to_user_id BIGINT   DEFAULT NULL            COMMENT '被回复的用户ID',
-    content          TEXT     NOT NULL                COMMENT '评论内容',
-    create_time      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (comment_id),
-    KEY idx_article_id (article_id),
-    KEY idx_user_id (user_id),
-    KEY idx_parent_id (parent_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客评论表';
+create index idx_article_id
+    on tb_blog_comment (article_id);
 
--- tb_music_history 建表脚本
-CREATE TABLE IF NOT EXISTS tb_music_history (
-    history_id  BIGINT   NOT NULL AUTO_INCREMENT COMMENT '历史ID',
-    user_id     BIGINT   NOT NULL                COMMENT '用户ID',
-    music_id    BIGINT   NOT NULL                COMMENT '音乐ID',
-    play_time   DATETIME NOT NULL                COMMENT '播放时间（客户端时间）',
-    PRIMARY KEY (history_id),
-    UNIQUE KEY uk_user_music (user_id, music_id),
-    KEY idx_user_id_play_time (user_id, play_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='音乐播放历史表';
+create index idx_parent_id
+    on tb_blog_comment (parent_id);
 
--- tb_music_favorite 建表脚本
-CREATE TABLE IF NOT EXISTS tb_music_favorite (
-    favorite_id BIGINT   NOT NULL AUTO_INCREMENT COMMENT '收藏ID',
-    user_id     BIGINT   NOT NULL                COMMENT '用户ID',
-    music_id    BIGINT   NOT NULL                COMMENT '音乐ID',
-    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
-    PRIMARY KEY (favorite_id),
-    UNIQUE KEY uk_user_music (user_id, music_id),
-    KEY idx_user_id (user_id),
-    KEY idx_music_id (music_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='音乐收藏表';
+create index idx_user_id
+    on tb_blog_comment (user_id);
 
--- tb_chat_conversation 建表脚本
-CREATE TABLE IF NOT EXISTS tb_chat_conversation (
-    conversation_id BIGINT   NOT NULL AUTO_INCREMENT COMMENT '会话ID',
-    user_id         BIGINT   NOT NULL                COMMENT '用户ID',
-    title           VARCHAR(256) NOT NULL DEFAULT '' COMMENT '会话标题',
-    create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (conversation_id),
-    KEY idx_user_id (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI聊天会话表';
+create table tb_blog_favorite
+(
+    favorite_id bigint auto_increment comment '收藏ID'
+        primary key,
+    user_id     bigint                             not null comment '用户ID',
+    article_id  bigint                             not null comment '文章ID',
+    create_time datetime default CURRENT_TIMESTAMP not null comment '收藏时间',
+    constraint uk_user_article
+        unique (user_id, article_id)
+)
+    comment '用户收藏表' collate = utf8mb4_unicode_ci;
 
--- tb_playlist 建表脚本
-CREATE TABLE IF NOT EXISTS tb_playlist (
-    playlist_id BIGINT       NOT NULL AUTO_INCREMENT COMMENT '歌单ID',
-    user_id     BIGINT       NOT NULL                COMMENT '所有者用户ID',
-    name        VARCHAR(128) NOT NULL                COMMENT '歌单名称',
-    description VARCHAR(512) NOT NULL DEFAULT ''     COMMENT '歌单描述',
-    cover_path  VARCHAR(512) NOT NULL DEFAULT ''     COMMENT '封面存储路径',
-    create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted     TINYINT(1)  NOT NULL DEFAULT 0       COMMENT '逻辑删除标记（0=正常, 1=已删除）',
-    PRIMARY KEY (playlist_id),
-    KEY idx_user_id (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='歌单表';
+create index idx_article_id
+    on tb_blog_favorite (article_id);
 
--- tb_playlist_music 建表脚本
-CREATE TABLE IF NOT EXISTS tb_playlist_music (
-    id          BIGINT   NOT NULL AUTO_INCREMENT COMMENT '关联ID',
-    playlist_id BIGINT   NOT NULL                COMMENT '歌单ID',
-    music_id    BIGINT   NOT NULL                COMMENT '音乐ID',
-    sort_order  INT      NOT NULL DEFAULT 0       COMMENT '排序序号',
-    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '添加时间',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_playlist_music (playlist_id, music_id),
-    KEY idx_playlist_id (playlist_id),
-    KEY idx_music_id (music_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='歌单歌曲关联表';
+create index idx_user_id
+    on tb_blog_favorite (user_id);
 
--- tb_chat_message 建表脚本
-CREATE TABLE IF NOT EXISTS tb_chat_message (
-    message_id      BIGINT   NOT NULL AUTO_INCREMENT COMMENT '消息ID',
-    conversation_id BIGINT   NOT NULL                COMMENT '会话ID',
-    role            VARCHAR(16) NOT NULL             COMMENT '角色: user | assistant',
-    content         TEXT     NOT NULL                COMMENT '消息内容',
-    create_time     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (message_id),
-    KEY idx_conversation_id (conversation_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI聊天消息表';
+create table tb_blog_history
+(
+    history_id  bigint auto_increment comment '历史ID'
+        primary key,
+    user_id     bigint                             not null comment '用户ID',
+    article_id  bigint                             not null comment '文章ID',
+    create_time datetime default CURRENT_TIMESTAMP not null comment '浏览时间',
+    constraint uk_user_article
+        unique (user_id, article_id)
+)
+    comment '用户浏览历史表' collate = utf8mb4_unicode_ci;
+
+create index idx_article_id
+    on tb_blog_history (article_id);
+
+create index idx_user_id
+    on tb_blog_history (user_id);
+
+create table tb_chat_conversation
+(
+    conversation_id bigint auto_increment comment '会话ID'
+        primary key,
+    user_id         bigint                                 not null comment '用户ID',
+    title           varchar(256) default ''                not null comment '会话标题',
+    create_time     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间'
+)
+    comment 'AI聊天会话表' collate = utf8mb4_unicode_ci;
+
+create index idx_user_id
+    on tb_chat_conversation (user_id);
+
+create table tb_chat_message
+(
+    message_id      bigint auto_increment comment '消息ID'
+        primary key,
+    conversation_id bigint                             not null comment '会话ID',
+    role            varchar(16)                        not null comment '角色: user | assistant',
+    content         text                               not null comment '消息内容',
+    create_time     datetime default CURRENT_TIMESTAMP not null comment '创建时间'
+)
+    comment 'AI聊天消息表' collate = utf8mb4_unicode_ci;
+
+create index idx_conversation_id
+    on tb_chat_message (conversation_id);
+
+create table tb_music
+(
+    music_id     bigint auto_increment comment '音乐ID'
+        primary key,
+    title        varchar(256)                           not null comment '歌曲标题',
+    artist_id    bigint       default 0                 not null comment '歌手ID（0=直接使用artist字段）',
+    artist       varchar(128) default ''                not null comment '歌手名称',
+    duration     varchar(16)  default '00:00'           not null comment '时长（格式 mm:ss）',
+    file_path    varchar(512) default ''                not null comment 'RustFS 音乐文件存储路径',
+    cover_path   varchar(512) default ''                not null comment 'RustFS 封面图片存储路径',
+    genre        varchar(64)  default ''                not null comment '音乐流派',
+    release_time datetime                               null comment '发行时间',
+    create_time  datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time  datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    deleted      tinyint(1)   default 0                 not null comment '逻辑删除标记（0=正常, 1=已删除）',
+    lyric_path   varchar(500)                           null comment 'LRC歌词文件存储路径'
+)
+    comment '音乐表' collate = utf8mb4_unicode_ci;
+
+create index idx_artist
+    on tb_music (artist);
+
+create index idx_create_time
+    on tb_music (create_time);
+
+create index idx_genre
+    on tb_music (genre);
+
+create index idx_title
+    on tb_music (title);
+
+create table tb_music_favorite
+(
+    favorite_id bigint auto_increment comment '收藏ID'
+        primary key,
+    user_id     bigint                             not null comment '用户ID',
+    music_id    bigint                             not null comment '音乐ID',
+    create_time datetime default CURRENT_TIMESTAMP not null comment '收藏时间',
+    constraint uk_user_music
+        unique (user_id, music_id)
+)
+    comment '音乐收藏表' collate = utf8mb4_unicode_ci;
+
+create index idx_music_id
+    on tb_music_favorite (music_id);
+
+create index idx_user_id
+    on tb_music_favorite (user_id);
+
+create table tb_music_history
+(
+    history_id bigint auto_increment comment '历史ID'
+        primary key,
+    user_id    bigint   not null comment '用户ID',
+    music_id   bigint   not null comment '音乐ID',
+    play_time  datetime not null comment '播放时间（客户端时间）',
+    constraint uk_user_music
+        unique (user_id, music_id)
+)
+    comment '音乐播放历史表' collate = utf8mb4_unicode_ci;
+
+create index idx_user_id_play_time
+    on tb_music_history (user_id, play_time);
+
+create table tb_playlist
+(
+    playlist_id bigint auto_increment comment '歌单ID'
+        primary key,
+    user_id     bigint                                 not null comment '所有者用户ID',
+    name        varchar(128)                           not null comment '歌单名称',
+    description varchar(512) default ''                not null comment '歌单描述',
+    cover_path  varchar(512) default ''                not null comment '封面存储路径',
+    create_time datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    update_time datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    deleted     tinyint(1)   default 0                 not null comment '逻辑删除标记（0=正常, 1=已删除）'
+)
+    comment '歌单表' collate = utf8mb4_unicode_ci;
+
+create index idx_user_id
+    on tb_playlist (user_id);
+
+create table tb_playlist_music
+(
+    id          bigint auto_increment comment '关联ID'
+        primary key,
+    playlist_id bigint                             not null comment '歌单ID',
+    music_id    bigint                             not null comment '音乐ID',
+    sort_order  int      default 0                 not null comment '排序序号',
+    create_time datetime default CURRENT_TIMESTAMP not null comment '添加时间',
+    constraint uk_playlist_music
+        unique (playlist_id, music_id)
+)
+    comment '歌单歌曲关联表' collate = utf8mb4_unicode_ci;
+
+create index idx_music_id
+    on tb_playlist_music (music_id);
+
+create index idx_playlist_id
+    on tb_playlist_music (playlist_id);
+
+create table tb_user
+(
+    user_id      bigint auto_increment comment '用户ID'
+        primary key,
+    email        varchar(128)                       not null comment '邮箱',
+    password     varchar(256)                       not null comment '密码（BCrypt加密）',
+    role         int      default 1                 not null comment '角色 1-普通用户 2-管理员',
+    status       int      default 0                 not null comment '状态 0-正常 1-禁用',
+    nickname     varchar(64)                        null comment '昵称',
+    gender       int      default 0                 null comment '性别 0-未设置 1-男 2-女',
+    user_avatar  varchar(512)                       null comment '头像URL',
+    introduction varchar(512)                       null comment '个人简介',
+    birthday     date                               null comment '生日',
+    create_time  datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    constraint uk_email
+        unique (email)
+)
+    comment '用户表' collate = utf8mb4_unicode_ci;
+
+
