@@ -17,4 +17,5 @@ public class Article {
     private int status = 1;
     private LocalDateTime createTime = LocalDateTime.now();
     private LocalDateTime updateTime;
+    private int likeCount;
 }

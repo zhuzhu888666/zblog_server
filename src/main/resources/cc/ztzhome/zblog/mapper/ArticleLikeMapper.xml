@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.ztzhome.zblog.mapper.ArticleLikeMapper">
+
+    <resultMap id="ArticleLikeResultMap" type="cc.ztzhome.zblog.bean.entity.ArticleLike">
+        <id property="likeId" column="like_id" />
+        <result property="userId" column="user_id" />
+        <result property="articleId" column="article_id" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <insert id="insert" parameterType="cc.ztzhome.zblog.bean.entity.ArticleLike"
+            useGeneratedKeys="true" keyProperty="likeId">
+        INSERT INTO tb_blog_like (user_id, article_id, create_time)
+        VALUES (#{userId}, #{articleId}, #{createTime})
+    </insert>
+
+    <delete id="deleteByUserAndArticle">
+        DELETE FROM tb_blog_like WHERE user_id = #{userId} AND article_id = #{articleId}
+    </delete>
+
+    <select id="selectByUserAndArticle" resultMap="ArticleLikeResultMap">
+        SELECT * FROM tb_blog_like WHERE user_id = #{userId} AND article_id = #{articleId}
+    </select>
+
+    <select id="countByArticleId" resultType="int">
+        SELECT COUNT(*) FROM tb_blog_like WHERE article_id = #{articleId}
+    </select>
+
+</mapper>

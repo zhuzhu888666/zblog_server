@@ -6,7 +6,7 @@ create table tb_article
     title        varchar(256)                          not null comment '文章标题',
     content      text                                  not null comment '文章正文',
     article_type varchar(32) default 'other'           not null comment '文章类型: tech-技术, life-生活, essay-随笔, notes-笔记, other-其他',
-    cover_key    varchar(512)                          null comment '封面图片RustFS对象键',
+    cover_key    varchar(512)                          null comment '封面',
     status       int         default 1                 not null comment '状态 0-草稿 1-已发布',
     create_time  datetime    default CURRENT_TIMESTAMP not null comment '创建时间',
     update_time  datetime    default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间'
@@ -77,6 +77,24 @@ create index idx_article_id
 create index idx_user_id
     on tb_blog_history (user_id);
 
+create table tb_blog_like
+(
+    like_id     bigint auto_increment comment '点赞ID'
+        primary key,
+    user_id     bigint                             not null comment '用户ID',
+    article_id  bigint                             not null comment '文章ID',
+    create_time datetime default CURRENT_TIMESTAMP not null comment '点赞时间',
+    constraint uk_user_article_like
+        unique (user_id, article_id)
+)
+    comment '用户点赞表' collate = utf8mb4_unicode_ci;
+
+create index idx_article_id
+    on tb_blog_like (article_id);
+
+create index idx_user_id
+    on tb_blog_like (user_id);
+
 create table tb_chat_conversation
 (
     conversation_id bigint auto_increment comment '会话ID'
@@ -113,8 +131,8 @@ create table tb_music
     artist_id    bigint       default 0                 not null comment '歌手ID（0=直接使用artist字段）',
     artist       varchar(128) default ''                not null comment '歌手名称',
     duration     varchar(16)  default '00:00'           not null comment '时长（格式 mm:ss）',
-    file_path    varchar(512) default ''                not null comment 'RustFS 音乐文件存储路径',
-    cover_path   varchar(512) default ''                not null comment 'RustFS 封面图片存储路径',
+    file_path    varchar(512) default ''                not null comment '音乐存储路径',
+    cover_path   varchar(512) default ''                not null comment '封面存储路径',
     genre        varchar(64)  default ''                not null comment '音乐流派',
     release_time datetime                               null comment '发行时间',
     create_time  datetime     default CURRENT_TIMESTAMP not null comment '创建时间',

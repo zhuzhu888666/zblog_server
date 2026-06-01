@@ -13,6 +13,7 @@
         <result property="status" column="status" />
         <result property="createTime" column="create_time" />
         <result property="updateTime" column="update_time" />
+        <result property="likeCount" column="like_count" />
     </resultMap>
 
     <insert id="insertArticle" parameterType="cc.ztzhome.zblog.bean.entity.Article"
@@ -44,19 +45,27 @@
     </insert>
 
     <select id="selectById" resultMap="ArticleResultMap">
-        SELECT * FROM tb_article WHERE article_id = #{articleId}
+        SELECT a.*,
+               (SELECT COUNT(*) FROM tb_blog_like WHERE article_id = a.article_id) AS like_count
+        FROM tb_article a WHERE a.article_id = #{articleId}
     </select>
 
     <select id="selectPublishedList" resultMap="ArticleResultMap">
-        SELECT * FROM tb_article WHERE status = 1 ORDER BY create_time DESC
+        SELECT a.*,
+               (SELECT COUNT(*) FROM tb_blog_like WHERE article_id = a.article_id) AS like_count
+        FROM tb_article a WHERE a.status = 1 ORDER BY a.create_time DESC
     </select>
 
     <select id="selectRandomPublishedList" resultMap="ArticleResultMap">
-        SELECT * FROM tb_article WHERE status = 1 ORDER BY RAND() LIMIT #{limit} OFFSET #{offset}
+        SELECT a.*,
+               (SELECT COUNT(*) FROM tb_blog_like WHERE article_id = a.article_id) AS like_count
+        FROM tb_article a WHERE a.status = 1 ORDER BY RAND() LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="selectByUserId" resultMap="ArticleResultMap">
-        SELECT * FROM tb_article WHERE user_id = #{userId} AND status = 1 ORDER BY create_time DESC
+        SELECT a.*,
+               (SELECT COUNT(*) FROM tb_blog_like WHERE article_id = a.article_id) AS like_count
+        FROM tb_article a WHERE a.user_id = #{userId} AND a.status = 1 ORDER BY a.create_time DESC
     </select>
 
     <update id="updateCoverKey">
@@ -68,16 +77,18 @@
     </update>
 
     <select id="selectByPageWithFilter" resultMap="ArticleResultMap">
-        SELECT * FROM tb_article
+        SELECT a.*,
+               (SELECT COUNT(*) FROM tb_blog_like WHERE article_id = a.article_id) AS like_count
+        FROM tb_article a
         <where>
             <if test="keyword != null and keyword != ''">
-                AND title LIKE CONCAT('%', #{keyword}, '%')
+                AND a.title LIKE CONCAT('%', #{keyword}, '%')
             </if>
             <if test="status != null">
-                AND status = #{status}
+                AND a.status = #{status}
             </if>
         </where>
-        ORDER BY create_time DESC
+        ORDER BY a.create_time DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 

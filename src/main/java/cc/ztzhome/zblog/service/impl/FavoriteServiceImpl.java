@@ -97,6 +97,7 @@ public class FavoriteServiceImpl implements IFavoriteService {
         vo.setStatus(article.getStatus());
         vo.setCreateTime(article.getCreateTime());
         vo.setUpdateTime(article.getUpdateTime());
+        vo.setLikeCount(article.getLikeCount());
 
         if (article.getCoverKey() != null && !article.getCoverKey().isEmpty()) {
             try {

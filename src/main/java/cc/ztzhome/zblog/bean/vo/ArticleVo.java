@@ -19,4 +19,5 @@ public class ArticleVo {
     private int status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private int likeCount;
 }
