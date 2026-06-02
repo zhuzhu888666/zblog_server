@@ -15,6 +15,7 @@ import cc.ztzhome.zblog.utils.FileTypeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class ArticleServiceImpl implements IArticleService {
     private RustFsService rustFsService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, String articleType, MultipartFile cover) {
         if (userId == null) {
             return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
@@ -82,7 +84,7 @@ public class ArticleServiceImpl implements IArticleService {
                 rustFsService.upload(objectKey, cover.getInputStream(), cover.getSize(), cover.getContentType());
             } catch (IOException e) {
                 log.error("Failed to upload article cover to RustFS", e);
-                return ResponseModel.serverError();
+                throw new RuntimeException("Failed to upload article cover", e);
             }
             articleMapper.updateCoverKey(article.getArticleId(), objectKey);
             article.setCoverKey(objectKey);
