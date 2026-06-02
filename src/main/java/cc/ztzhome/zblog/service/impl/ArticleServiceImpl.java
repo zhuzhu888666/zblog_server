@@ -6,10 +6,13 @@ import cc.ztzhome.zblog.bean.entity.User;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.ArticleVo;
 import cc.ztzhome.zblog.bean.vo.PageResult;
+import cc.ztzhome.zblog.bean.vo.TagVo;
 import cc.ztzhome.zblog.constant.AppConstants;
 import cc.ztzhome.zblog.mapper.ArticleMapper;
+import cc.ztzhome.zblog.mapper.TagMapper;
 import cc.ztzhome.zblog.mapper.UserMapper;
 import cc.ztzhome.zblog.service.IArticleService;
+import cc.ztzhome.zblog.service.ITagService;
 import cc.ztzhome.zblog.service.RustFsService;
 import cc.ztzhome.zblog.utils.FileTypeUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,11 +40,17 @@ public class ArticleServiceImpl implements IArticleService {
     private UserMapper userMapper;
 
     @Autowired
+    private ITagService tagService;
+
+    @Autowired
+    private TagMapper tagMapper;
+
+    @Autowired
     private RustFsService rustFsService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, String articleType, MultipartFile cover) {
+    public ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, List<Long> tagIds, MultipartFile cover) {
         if (userId == null) {
             return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
         }
@@ -58,8 +69,9 @@ public class ArticleServiceImpl implements IArticleService {
         article.setTitle(title.trim());
         article.setContent(content.trim());
 
-        if (articleType != null && !articleType.isBlank()) {
-            article.setArticleType(articleType.trim());
+        if (tagIds != null && !tagIds.isEmpty()) {
+            TagVo firstTag = tagService.getTag(tagIds.get(0)).getData();
+            article.setArticleType(firstTag != null ? firstTag.getName() : "other");
         }
 
         if (cover != null && !cover.isEmpty()) {
@@ -90,15 +102,28 @@ public class ArticleServiceImpl implements IArticleService {
             article.setCoverKey(objectKey);
         }
 
+        if (tagIds != null && !tagIds.isEmpty()) {
+            for (Long tagId : tagIds) {
+                tagMapper.insertArticleTag(article.getArticleId(), tagId);
+            }
+        }
+
         return ResponseModel.success("文章发布成功", toArticleVo(article));
     }
 
     @Override
-    public ResponseModel<List<ArticleVo>> listArticles() {
-        List<Article> articles = articleMapper.selectPublishedList();
+    public ResponseModel<List<ArticleVo>> listArticles(Long tagId) {
+        List<Article> articles;
+        if (tagId != null) {
+            articles = articleMapper.selectByTagId(tagId, 0, Integer.MAX_VALUE);
+        } else {
+            articles = articleMapper.selectPublishedList();
+        }
+        List<Long> articleIds = articles.stream().map(Article::getArticleId).collect(Collectors.toList());
+        Map<Long, List<TagVo>> tagsMap = batchLoadTags(articleIds);
         List<ArticleVo> voList = new ArrayList<>();
         for (Article article : articles) {
-            voList.add(toArticleVo(article));
+            voList.add(toArticleVo(article, tagsMap.get(article.getArticleId())));
         }
         return ResponseModel.success(voList);
     }
@@ -110,9 +135,11 @@ public class ArticleServiceImpl implements IArticleService {
         int offset = (p - 1) * ps;
 
         List<Article> articles = articleMapper.selectRandomPublishedList(offset, ps);
+        List<Long> articleIds = articles.stream().map(Article::getArticleId).collect(Collectors.toList());
+        Map<Long, List<TagVo>> tagsMap = batchLoadTags(articleIds);
         List<ArticleVo> voList = new ArrayList<>();
         for (Article article : articles) {
-            voList.add(toArticleVo(article));
+            voList.add(toArticleVo(article, tagsMap.get(article.getArticleId())));
         }
         return ResponseModel.success(voList);
     }
@@ -123,9 +150,11 @@ public class ArticleServiceImpl implements IArticleService {
             return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
         }
         List<Article> articles = articleMapper.selectByUserId(userId);
+        List<Long> articleIds = articles.stream().map(Article::getArticleId).collect(Collectors.toList());
+        Map<Long, List<TagVo>> tagsMap = batchLoadTags(articleIds);
         List<ArticleVo> voList = new ArrayList<>();
         for (Article article : articles) {
-            voList.add(toArticleVo(article));
+            voList.add(toArticleVo(article, tagsMap.get(article.getArticleId())));
         }
         return ResponseModel.success(voList);
     }
@@ -169,19 +198,22 @@ public class ArticleServiceImpl implements IArticleService {
     }
 
     @Override
-    public ResponseModel<PageResult<ArticleVo>> listArticles(int page, int size, String keyword, Integer status) {
+    public ResponseModel<PageResult<ArticleVo>> listArticles(int page, int size, String keyword, Integer status, Long tagId) {
         int p = Math.max(page, 1);
         int s = Math.max(size, 1);
         int offset = (p - 1) * s;
 
-        List<Article> records = articleMapper.selectByPageWithFilter(offset, s, keyword, status);
-        long total = articleMapper.countWithFilter(keyword, status);
-        List<ArticleVo> vos = records.stream().map(this::toArticleVo).toList();
+        List<Article> records = articleMapper.selectByPageWithFilter(offset, s, keyword, status, tagId);
+        long total = articleMapper.countWithFilter(keyword, status, tagId);
+        List<Long> articleIds = records.stream().map(Article::getArticleId).collect(Collectors.toList());
+        Map<Long, List<TagVo>> tagsMap = batchLoadTags(articleIds);
+        List<ArticleVo> vos = records.stream().map(r -> toArticleVo(r, tagsMap.get(r.getArticleId()))).toList();
         return ResponseModel.success(new PageResult<>(vos, total, p, s));
     }
 
     @Override
-    public ResponseModel<ArticleVo> adminUpdateArticle(Long articleId, Article article) {
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseModel<ArticleVo> adminUpdateArticle(Long articleId, Article article, List<Long> tagIds) {
         if (articleId == null) {
             return ResponseModel.error(ResponseModel.CODE_BAD_REQUEST, "文章ID不能为空");
         }
@@ -191,6 +223,12 @@ public class ArticleServiceImpl implements IArticleService {
         }
         article.setArticleId(articleId);
         articleMapper.updateArticle(article);
+        if (tagIds != null) {
+            tagMapper.deleteArticleTags(articleId);
+            for (Long tagId : tagIds) {
+                tagMapper.insertArticleTag(articleId, tagId);
+            }
+        }
         Article updated = articleMapper.selectById(articleId);
         return ResponseModel.success("更新成功", toArticleVo(updated));
     }
@@ -244,12 +282,17 @@ public class ArticleServiceImpl implements IArticleService {
     }
 
     private ArticleVo toArticleVo(Article article) {
+        return toArticleVo(article, tagService.getTagsByArticleId(article.getArticleId()));
+    }
+
+    private ArticleVo toArticleVo(Article article, List<TagVo> tags) {
         ArticleVo vo = new ArticleVo();
         vo.setArticleId(article.getArticleId());
         vo.setUserId(article.getUserId());
         vo.setTitle(article.getTitle());
         vo.setContent(article.getContent());
         vo.setArticleType(article.getArticleType());
+        vo.setTags(tags != null ? tags : new ArrayList<>());
         vo.setStatus(article.getStatus());
         vo.setCreateTime(article.getCreateTime());
         vo.setUpdateTime(article.getUpdateTime());
@@ -279,5 +322,23 @@ public class ArticleServiceImpl implements IArticleService {
         }
 
         return vo;
+    }
+
+    private Map<Long, List<TagVo>> batchLoadTags(List<Long> articleIds) {
+        if (articleIds == null || articleIds.isEmpty()) {
+            return new java.util.HashMap<>();
+        }
+        Map<Long, List<TagVo>> result = new java.util.HashMap<>();
+        articleIds.forEach(id -> result.put(id, new ArrayList<>()));
+        List<cc.ztzhome.zblog.bean.entity.Tag> tagsWithArticle = tagMapper.selectByArticleIds(articleIds);
+        for (cc.ztzhome.zblog.bean.entity.Tag t : tagsWithArticle) {
+            TagVo vo = new TagVo();
+            vo.setTagId(t.getTagId());
+            vo.setName(t.getName());
+            vo.setIcon(t.getIcon());
+            vo.setKeywords(t.getKeywords());
+            result.get(t.getArticleId()).add(vo);
+        }
+        return result;
     }
 }

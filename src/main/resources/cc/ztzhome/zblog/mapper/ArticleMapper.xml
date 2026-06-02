@@ -80,6 +80,9 @@
         SELECT a.*,
                (SELECT COUNT(*) FROM tb_blog_like WHERE article_id = a.article_id) AS like_count
         FROM tb_article a
+        <if test="tagId != null">
+            INNER JOIN tb_article_tag at ON a.article_id = at.article_id
+        </if>
         <where>
             <if test="keyword != null and keyword != ''">
                 AND a.title LIKE CONCAT('%', #{keyword}, '%')
@@ -87,21 +90,47 @@
             <if test="status != null">
                 AND a.status = #{status}
             </if>
+            <if test="tagId != null">
+                AND at.tag_id = #{tagId}
+            </if>
         </where>
         ORDER BY a.create_time DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countWithFilter" resultType="long">
-        SELECT COUNT(*) FROM tb_article
+        SELECT COUNT(*) FROM tb_article a
+        <if test="tagId != null">
+            INNER JOIN tb_article_tag at ON a.article_id = at.article_id
+        </if>
         <where>
             <if test="keyword != null and keyword != ''">
-                AND title LIKE CONCAT('%', #{keyword}, '%')
+                AND a.title LIKE CONCAT('%', #{keyword}, '%')
             </if>
             <if test="status != null">
-                AND status = #{status}
+                AND a.status = #{status}
+            </if>
+            <if test="tagId != null">
+                AND at.tag_id = #{tagId}
             </if>
         </where>
+    </select>
+
+    <select id="selectByTagId" resultMap="ArticleResultMap">
+        SELECT a.*,
+               (SELECT COUNT(*) FROM tb_blog_like WHERE article_id = a.article_id) AS like_count
+        FROM tb_article a
+        INNER JOIN tb_article_tag at ON a.article_id = at.article_id
+        WHERE at.tag_id = #{tagId} AND a.status = 1
+        ORDER BY a.create_time DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByTagId" resultType="long">
+        SELECT COUNT(*)
+        FROM tb_article a
+        INNER JOIN tb_article_tag at ON a.article_id = at.article_id
+        WHERE at.tag_id = #{tagId} AND a.status = 1
     </select>
 
     <update id="updateArticle">

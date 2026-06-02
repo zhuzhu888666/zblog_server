@@ -23,9 +23,15 @@ public interface ArticleMapper {
     int updateStatus(@Param("articleId") Long articleId, @Param("status") int status);
 
     List<Article> selectByPageWithFilter(@Param("offset") int offset, @Param("limit") int limit,
-                                         @Param("keyword") String keyword, @Param("status") Integer status);
+                                         @Param("keyword") String keyword, @Param("status") Integer status,
+                                         @Param("tagId") Long tagId);
 
-    long countWithFilter(@Param("keyword") String keyword, @Param("status") Integer status);
+    long countWithFilter(@Param("keyword") String keyword, @Param("status") Integer status,
+                         @Param("tagId") Long tagId);
 
     int updateArticle(Article article);
+
+    List<Article> selectByTagId(@Param("tagId") Long tagId, @Param("offset") int offset, @Param("limit") int limit);
+
+    long countByTagId(@Param("tagId") Long tagId);
 }

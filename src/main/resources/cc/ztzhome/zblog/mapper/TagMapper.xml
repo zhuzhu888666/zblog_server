@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.ztzhome.zblog.mapper.TagMapper">
+
+    <resultMap id="TagResultMap" type="cc.ztzhome.zblog.bean.entity.Tag">
+        <id property="tagId" column="tag_id" />
+        <result property="name" column="name" />
+        <result property="icon" column="icon" />
+        <result property="keywords" column="keywords" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <resultMap id="TagWithCountResultMap" type="cc.ztzhome.zblog.bean.entity.Tag" extends="TagResultMap">
+        <result property="articleCount" column="article_count" />
+    </resultMap>
+
+    <resultMap id="TagWithArticleIdResultMap" type="cc.ztzhome.zblog.bean.entity.Tag" extends="TagResultMap">
+        <result property="articleId" column="article_id" />
+    </resultMap>
+
+    <select id="selectAll" resultMap="TagResultMap">
+        SELECT t.*,
+               (SELECT COUNT(*) FROM tb_article_tag at
+                INNER JOIN tb_article a ON a.article_id = at.article_id AND a.status = 1
+                WHERE at.tag_id = t.tag_id) AS article_count
+        FROM tb_tag t
+        ORDER BY t.tag_id
+    </select>
+
+    <select id="selectById" resultMap="TagResultMap">
+        SELECT t.*,
+               (SELECT COUNT(*) FROM tb_article_tag at
+                INNER JOIN tb_article a ON a.article_id = at.article_id AND a.status = 1
+                WHERE at.tag_id = t.tag_id) AS article_count
+        FROM tb_tag t
+        WHERE t.tag_id = #{tagId}
+    </select>
+
+    <select id="selectByArticleId" resultMap="TagResultMap">
+        SELECT t.* FROM tb_tag t
+        INNER JOIN tb_article_tag at ON t.tag_id = at.tag_id
+        WHERE at.article_id = #{articleId}
+    </select>
+
+    <select id="selectByArticleIds" resultMap="TagWithArticleIdResultMap">
+        SELECT t.*, at.article_id FROM tb_tag t
+        INNER JOIN tb_article_tag at ON t.tag_id = at.tag_id
+        WHERE at.article_id IN
+        <foreach collection="articleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <insert id="insertTag" parameterType="cc.ztzhome.zblog.bean.entity.Tag"
+            useGeneratedKeys="true" keyProperty="tagId">
+        INSERT INTO tb_tag (name, icon, keywords, create_time)
+        VALUES (#{name}, #{icon}, #{keywords}, #{createTime})
+    </insert>
+
+    <update id="updateTag">
+        UPDATE tb_tag
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="keywords != null">keywords = #{keywords},</if>
+        </set>
+        WHERE tag_id = #{tagId}
+    </update>
+
+    <delete id="deleteTag">
+        DELETE FROM tb_tag WHERE tag_id = #{tagId}
+    </delete>
+
+    <insert id="insertArticleTag">
+        INSERT INTO tb_article_tag (article_id, tag_id)
+        VALUES (#{articleId}, #{tagId})
+    </insert>
+
+    <delete id="deleteArticleTags">
+        DELETE FROM tb_article_tag WHERE article_id = #{articleId}
+    </delete>
+
+</mapper>

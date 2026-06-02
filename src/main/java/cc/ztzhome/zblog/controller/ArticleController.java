@@ -24,16 +24,17 @@ public class ArticleController {
     public ResponseModel<ArticleVo> createArticle(
             @RequestParam("title") String title,
             @RequestParam("content") String content,
-            @RequestParam(value = "articleType", required = false) String articleType,
+            @RequestParam(value = "tagIds", required = false) List<Long> tagIds,
             @RequestParam(value = "cover", required = false) MultipartFile cover,
             HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        return articleService.createArticle(userId, title, content, articleType, cover);
+        return articleService.createArticle(userId, title, content, tagIds, cover);
     }
 
     @GetMapping("/public/article/list")
-    public ResponseModel<List<ArticleVo>> listArticles() {
-        return articleService.listArticles();
+    public ResponseModel<List<ArticleVo>> listArticles(
+            @RequestParam(value = "tagId", required = false) Long tagId) {
+        return articleService.listArticles(tagId);
     }
 
     @GetMapping("/public/article/random")
@@ -65,8 +66,9 @@ public class ArticleController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Integer status) {
-        return articleService.listArticles(page, size, keyword, status);
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) Long tagId) {
+        return articleService.listArticles(page, size, keyword, status, tagId);
     }
 
     @GetMapping("/admin/articles/{id}")
@@ -75,8 +77,9 @@ public class ArticleController {
     }
 
     @PutMapping("/admin/articles/{id}")
-    public ResponseModel<ArticleVo> updateArticle(@PathVariable Long id, @RequestBody Article article) {
-        return articleService.adminUpdateArticle(id, article);
+    public ResponseModel<ArticleVo> updateArticle(@PathVariable Long id, @RequestBody Article article,
+                                                   @RequestParam(value = "tagIds", required = false) List<Long> tagIds) {
+        return articleService.adminUpdateArticle(id, article, tagIds);
     }
 
     @DeleteMapping("/admin/articles/{id}")

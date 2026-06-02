@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Setter
 @Getter
@@ -16,6 +17,7 @@ public class ArticleVo {
     private String content;
     private String coverUrl;
     private String articleType;
+    private List<TagVo> tags;
     private int status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

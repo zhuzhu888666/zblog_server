@@ -223,6 +223,60 @@ create index idx_music_id
 create index idx_playlist_id
     on tb_playlist_music (playlist_id);
 
+-- ==================== 标签模块 ====================
+
+create table tb_tag
+(
+    tag_id      bigint auto_increment comment '标签ID'
+        primary key,
+    name        varchar(32)                        not null comment '标签名称',
+    icon        varchar(64)  default ''            not null comment '图标(FA class)',
+    keywords    varchar(512) default ''            not null comment '匹配关键词，逗号分隔',
+    create_time datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    constraint uk_tag_name
+        unique (name)
+)
+    comment '标签表' collate = utf8mb4_unicode_ci;
+
+create table tb_article_tag
+(
+    id         bigint auto_increment comment '关联ID'
+        primary key,
+    article_id bigint not null comment '文章ID',
+    tag_id     bigint not null comment '标签ID',
+    constraint uk_article_tag
+        unique (article_id, tag_id)
+)
+    comment '文章标签关联表' collate = utf8mb4_unicode_ci;
+
+create index idx_article_id
+    on tb_article_tag (article_id);
+
+create index idx_tag_id
+    on tb_article_tag (tag_id);
+
+-- 插入默认标签
+
+INSERT INTO tb_tag (name, icon, keywords) VALUES
+('技术', 'fa-solid fa-microchip', '技术,tech,编程,代码,开发,算法,架构'),
+('生活', 'fa-solid fa-mug-hot', '生活,life,日常,感悟,日记'),
+('随笔', 'fa-solid fa-feather', '随笔,essay,散文,感想'),
+('笔记', 'fa-solid fa-book', '笔记,notes,记录,学习,教程'),
+('其他', 'fa-solid fa-ellipsis', 'other,其它,杂项');
+
+-- 迁移现有 article_type 数据到 tag 系统
+
+INSERT INTO tb_article_tag (article_id, tag_id)
+SELECT a.article_id, t.tag_id FROM tb_article a
+JOIN tb_tag t ON (
+    (a.article_type = 'tech' AND t.name = '技术') OR
+    (a.article_type = 'life' AND t.name = '生活') OR
+    (a.article_type = 'essay' AND t.name = '随笔') OR
+    (a.article_type = 'notes' AND t.name = '笔记') OR
+    (a.article_type = 'other' AND t.name = '其他')
+)
+WHERE a.article_type IS NOT NULL AND a.article_type != '';
+
 create table tb_user
 (
     user_id      bigint auto_increment comment '用户ID'

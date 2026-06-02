@@ -10,9 +10,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface IArticleService {
-    ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, String articleType, MultipartFile cover);
+    ResponseModel<ArticleVo> createArticle(Long userId, String title, String content, List<Long> tagIds, MultipartFile cover);
 
-    ResponseModel<List<ArticleVo>> listArticles();
+    ResponseModel<List<ArticleVo>> listArticles(Long tagId);
 
     ResponseModel<ArticleVo> getArticle(Long articleId);
 
@@ -22,9 +22,9 @@ public interface IArticleService {
 
     ResponseModel<Void> deleteArticle(Long userId, Long articleId);
 
-    ResponseModel<PageResult<ArticleVo>> listArticles(int page, int size, String keyword, Integer status);
+    ResponseModel<PageResult<ArticleVo>> listArticles(int page, int size, String keyword, Integer status, Long tagId);
 
-    ResponseModel<ArticleVo> adminUpdateArticle(Long articleId, Article article);
+    ResponseModel<ArticleVo> adminUpdateArticle(Long articleId, Article article, List<Long> tagIds);
 
     ResponseModel<Void> adminDeleteArticle(Long articleId);
 
