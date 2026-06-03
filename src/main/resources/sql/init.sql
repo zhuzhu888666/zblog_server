@@ -19,6 +19,23 @@ create index idx_create_time
 create index idx_user_id
     on tb_article (user_id);
 
+create table tb_article_tag
+(
+    id         bigint auto_increment comment '关联ID'
+        primary key,
+    article_id bigint not null comment '文章ID',
+    tag_id     bigint not null comment '标签ID',
+    constraint uk_article_tag
+        unique (article_id, tag_id)
+)
+    comment '文章标签关联表' collate = utf8mb4_unicode_ci;
+
+create index idx_article_id
+    on tb_article_tag (article_id);
+
+create index idx_tag_id
+    on tb_article_tag (tag_id);
+
 create table tb_blog_comment
 (
     comment_id       bigint auto_increment comment '评论ID'
@@ -95,24 +112,6 @@ create index idx_article_id
 create index idx_user_id
     on tb_blog_like (user_id);
 
-create table tb_user_follow
-(
-    follow_id   bigint auto_increment comment '关注ID'
-        primary key,
-    follower_id bigint                             not null comment '关注者用户ID',
-    followee_id bigint                             not null comment '被关注者用户ID',
-    create_time datetime default CURRENT_TIMESTAMP not null comment '关注时间',
-    constraint uk_follower_followee
-        unique (follower_id, followee_id)
-)
-    comment '用户关注表' collate = utf8mb4_unicode_ci;
-
-create index idx_follower_id
-    on tb_user_follow (follower_id);
-
-create index idx_followee_id
-    on tb_user_follow (followee_id);
-
 create table tb_chat_conversation
 (
     conversation_id bigint auto_increment comment '会话ID'
@@ -134,7 +133,7 @@ create table tb_chat_message
     conversation_id bigint                             not null comment '会话ID',
     role            varchar(16)                        not null comment '角色: user | assistant',
     content         text                               not null comment '消息内容',
-    image_url       varchar(1024)                      null comment '生成的图片URL',
+    image_url       varchar(512)                       null comment 'AI生成图片的RustFS存储路径',
     create_time     datetime default CURRENT_TIMESTAMP not null comment '创建时间'
 )
     comment 'AI聊天消息表' collate = utf8mb4_unicode_ci;
@@ -242,59 +241,18 @@ create index idx_music_id
 create index idx_playlist_id
     on tb_playlist_music (playlist_id);
 
--- ==================== 标签模块 ====================
-
 create table tb_tag
 (
     tag_id      bigint auto_increment comment '标签ID'
         primary key,
-    name        varchar(32)                        not null comment '标签名称',
-    icon        varchar(64)  default ''            not null comment '图标(FA class)',
-    keywords    varchar(512) default ''            not null comment '匹配关键词，逗号分隔',
+    name        varchar(32)                            not null comment '标签名称',
+    icon        varchar(64)  default ''                not null comment '图标(FA class)',
+    keywords    varchar(512) default ''                not null comment '匹配关键词，逗号分隔',
     create_time datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     constraint uk_tag_name
         unique (name)
 )
-    comment '标签表' collate = utf8mb4_unicode_ci;
-
-create table tb_article_tag
-(
-    id         bigint auto_increment comment '关联ID'
-        primary key,
-    article_id bigint not null comment '文章ID',
-    tag_id     bigint not null comment '标签ID',
-    constraint uk_article_tag
-        unique (article_id, tag_id)
-)
-    comment '文章标签关联表' collate = utf8mb4_unicode_ci;
-
-create index idx_article_id
-    on tb_article_tag (article_id);
-
-create index idx_tag_id
-    on tb_article_tag (tag_id);
-
--- 插入默认标签
-
-INSERT INTO tb_tag (name, icon, keywords) VALUES
-('技术', 'fa-solid fa-microchip', '技术,tech,编程,代码,开发,算法,架构'),
-('生活', 'fa-solid fa-mug-hot', '生活,life,日常,感悟,日记'),
-('随笔', 'fa-solid fa-feather', '随笔,essay,散文,感想'),
-('笔记', 'fa-solid fa-book', '笔记,notes,记录,学习,教程'),
-('其他', 'fa-solid fa-ellipsis', 'other,其它,杂项');
-
--- 迁移现有 article_type 数据到 tag 系统
-
-INSERT INTO tb_article_tag (article_id, tag_id)
-SELECT a.article_id, t.tag_id FROM tb_article a
-JOIN tb_tag t ON (
-    (a.article_type = 'tech' AND t.name = '技术') OR
-    (a.article_type = 'life' AND t.name = '生活') OR
-    (a.article_type = 'essay' AND t.name = '随笔') OR
-    (a.article_type = 'notes' AND t.name = '笔记') OR
-    (a.article_type = 'other' AND t.name = '其他')
-)
-WHERE a.article_type IS NOT NULL AND a.article_type != '';
+    comment '文章标签表' collate = utf8mb4_unicode_ci;
 
 create table tb_user
 (
@@ -314,5 +272,23 @@ create table tb_user
         unique (email)
 )
     comment '用户表' collate = utf8mb4_unicode_ci;
+
+create table tb_user_follow
+(
+    follow_id   bigint auto_increment comment '关注ID'
+        primary key,
+    follower_id bigint                             not null comment '关注者用户ID',
+    followee_id bigint                             not null comment '被关注者用户ID',
+    create_time datetime default CURRENT_TIMESTAMP not null comment '关注时间',
+    constraint uk_follower_followee
+        unique (follower_id, followee_id)
+)
+    comment '用户关注表' collate = utf8mb4_unicode_ci;
+
+create index idx_followee_id
+    on tb_user_follow (followee_id);
+
+create index idx_follower_id
+    on tb_user_follow (follower_id);
 
 

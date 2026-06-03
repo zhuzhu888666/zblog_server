@@ -9,24 +9,12 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-  ai:
-    deepseek:
-      api-key: your_actual_api_key_here # 👈 必须填写，不能留空
-      # 可选配置...
-      chat:
-        model:deepseek-v4-flash
-    openai:
-      api-key:    # 从模型官网获取
-      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1   #接口地址
-      chat:
-        options:
-          model: qwen-plus   # 指定使用的模型
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver   # MySQL 8 驱动，若为 MySQL 5 可改为 com.mysql.jdbc.Driver
-    url: jdbc:mysql://yourDb:3306/zblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    url: jdbc:mysql://yourDB:3306/zblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
     username:                          # 替换为你的数据库用户名
-    password:              # 替换为你的数据库密码
+    password:            # 替换为你的数据库密码
     # HikariCP 连接池配置（Spring Boot 默认）
     hikari:
       minimum-idle: 5
@@ -34,7 +22,25 @@ spring:
       idle-timeout: 30000
       connection-timeout: 30000
       pool-name: ZblogHikariPool
-
+  data:
+    redis:
+      host:   # 或 localhost
+      port: 6379
+      password:             # 如果没有密码则留空或注释
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+  ai:
+    deepseek:
+      api-key:  # 👈 必须填写，不能留空
+      # 可选配置...
+      chat:
+        model:deepseek-v4-flash
+    # 阿里云百炼 DashScope 配置
+    dashscope:
+      api-key:
 # MyBatis-Plus 配置
 mybatis-plus:
   # mapper XML 文件位置
@@ -77,7 +83,7 @@ jwt:
 
 # RustFS 对象存储配置（S3 兼容）
 rustfs:
-  endpoint: http://192.168.217.128:9000    # RustFS 服务端点地址
-  access-key: rustfsadmin        # 访问密钥
-  secret-key: rustfsadmin         # 私密密钥
+  endpoint:     # RustFS 服务端点地址
+  access-key:         # 访问密钥-用户名
+  secret-key:          # 私密密钥-密码
   bucket: zblog                       # 存储桶名称
