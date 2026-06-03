@@ -12,5 +12,6 @@ public class ChatMessageEntity {
     private Long conversationId;
     private String role;
     private String content;
+    private String imageUrl;
     private LocalDateTime createTime = LocalDateTime.now();
 }

@@ -5,9 +5,16 @@ import cc.ztzhome.zblog.bean.entity.ChatMessageEntity;
 import cc.ztzhome.zblog.bean.response.ResponseModel;
 import cc.ztzhome.zblog.bean.vo.ChatMessageVo;
 import cc.ztzhome.zblog.bean.vo.ConversationVo;
+import cc.ztzhome.zblog.constant.AppConstants;
 import cc.ztzhome.zblog.mapper.ChatConversationMapper;
 import cc.ztzhome.zblog.mapper.ChatMessageMapper;
 import cc.ztzhome.zblog.service.IChatService;
+import cc.ztzhome.zblog.service.RustFsService;
+import com.alibaba.dashscope.aigc.imagesynthesis.ImageSynthesis;
+import com.alibaba.dashscope.aigc.imagesynthesis.ImageSynthesisParam;
+import com.alibaba.dashscope.aigc.imagesynthesis.ImageSynthesisResult;
+import com.alibaba.dashscope.exception.ApiException;
+import com.alibaba.dashscope.exception.NoApiKeyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -18,11 +25,16 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 聊天服务实现类
@@ -39,12 +51,14 @@ public class ChatServiceImpl implements IChatService {
     private ChatMessageMapper chatMessageMapper;        // 消息记录Mapper
 
     @Autowired
-    @Qualifier("openAiChatModel")
-    private ChatModel openAiChatModel;  // Qwen千问模型（图片处理）
-
-    @Autowired
     @Qualifier("deepSeekChatModel")
     private ChatModel deepSeekChatModel;  // DeepSeek模型（聊天/帮助）
+
+    @Autowired
+    private RustFsService rustFsService;
+
+    @Value("${spring.ai.dashscope.api-key}")
+    private String dashscopeApiKey;
 
     /**
      * 发送消息并获取AI回复
@@ -107,8 +121,13 @@ public class ChatServiceImpl implements IChatService {
             }
         }
 
+        // 图片处理模型走图像生成流程
+        if ("image".equals(model)) {
+            return handleImageGeneration(conversationId, message.trim(), conversation);
+        }
+
         // 根据模型类型选择对应的AI模型
-        ChatModel selectedModel = "image".equals(model) ? openAiChatModel : deepSeekChatModel;
+        ChatModel selectedModel = deepSeekChatModel;
 
         // 调用AI模型获取回复
         try {
@@ -209,6 +228,86 @@ public class ChatServiceImpl implements IChatService {
     }
 
     /**
+     * 处理图片生成请求（阿里云百炼 DashScope SDK 原生调用）
+     * 1. 调用通义万相API获取临时图片URL
+     * 2. 下载图片并上传到RustFS S3
+     * 3. 生成预签名URL并保存消息
+     */
+    private ResponseModel<ChatMessageVo> handleImageGeneration(
+            Long conversationId, String prompt, ChatConversation conversation) {
+
+        // 1. 调用通义万相图像生成API
+        ImageSynthesisParam param = ImageSynthesisParam.builder()
+                .apiKey(dashscopeApiKey)
+                .model("wanx2.0-t2i-turbo")
+                .prompt(prompt)
+                .n(1)
+                .size("1024*1024")
+                .build();
+
+        ImageSynthesisResult result;
+        try {
+            result = new ImageSynthesis().call(param);
+        } catch (NoApiKeyException e) {
+            log.error("DashScope API key not configured", e);
+            return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "图片生成服务未配置API密钥");
+        } catch (ApiException e) {
+            log.error("DashScope image generation API call failed", e);
+            return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "图片生成失败，请稍后再试");
+        }
+
+        String tempImageUrl = result.getOutput().getResults().get(0).get("url");
+        if (tempImageUrl == null || tempImageUrl.isBlank()) {
+            log.error("Image generation returned empty URL");
+            return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "图片生成失败，未返回图片");
+        }
+
+        // 2. 下载生成的图片
+        byte[] imageBytes;
+        try {
+            imageBytes = new RestTemplate().getForObject(URI.create(tempImageUrl), byte[].class);
+        } catch (Exception e) {
+            log.error("Failed to download generated image from {}", tempImageUrl, e);
+            return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "下载生成的图片失败");
+        }
+
+        if (imageBytes == null || imageBytes.length == 0) {
+            return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "下载的图片为空");
+        }
+
+        // 3. 上传到RustFS S3
+        String objectKey = AppConstants.AI_IMAGE_PATH + UUID.randomUUID() + ".png";
+        try {
+            rustFsService.upload(objectKey, new ByteArrayInputStream(imageBytes),
+                    imageBytes.length, "image/png");
+        } catch (Exception e) {
+            log.error("Failed to upload generated image to RustFS: {}", objectKey, e);
+            return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "图片存储失败");
+        }
+
+        // 4. 生成预签名URL
+        String presignedUrl;
+        try {
+            presignedUrl = rustFsService.presignedGetUrl(objectKey, AppConstants.URL_TIMEOUT);
+        } catch (Exception e) {
+            log.error("Failed to generate presigned URL for {}", objectKey, e);
+            return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "生成图片链接失败");
+        }
+
+        // 5. 保存AI回复消息
+        ChatMessageEntity aiMsg = new ChatMessageEntity();
+        aiMsg.setConversationId(conversationId);
+        aiMsg.setRole("assistant");
+        aiMsg.setContent("[生成的图片]");
+        aiMsg.setImageUrl(presignedUrl);
+        chatMessageMapper.insert(aiMsg);
+
+        conversationMapper.updateTime(conversationId);
+
+        return ResponseModel.success(toMessageVo(aiMsg));
+    }
+
+    /**
      * 根据首条消息内容生成对话标题
      * 规则：长度不超过30字符，优先在标点或空格处截断，超长则添加省略号
      *
@@ -251,6 +350,7 @@ public class ChatServiceImpl implements IChatService {
         vo.setConversationId(entity.getConversationId());
         vo.setRole(entity.getRole());
         vo.setContent(entity.getContent());
+        vo.setImageUrl(entity.getImageUrl());
         vo.setCreatedAt(entity.getCreateTime());
         return vo;
     }

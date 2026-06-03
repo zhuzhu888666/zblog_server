@@ -12,5 +12,6 @@ public class ChatMessageVo {
     private long conversationId;
     private String role;
     private String content;
+    private String imageUrl;
     private LocalDateTime createdAt;
 }

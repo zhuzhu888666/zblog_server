@@ -39,6 +39,9 @@ public final class AppConstants {
     /** 轮播图片存放路径 */
     public static final String CAROUSEL_IMAGE = "image/carousel/";
 
+    /** AI生成的图片存放路径 */
+    public static final String AI_IMAGE_PATH = "image/ai-generated/";
+
 
     /**======博客模块=======**/
     public static final String ARTICLE_COVER_PATH="blog/article/cover";

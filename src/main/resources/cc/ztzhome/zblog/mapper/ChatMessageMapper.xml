@@ -8,13 +8,14 @@
         <result property="conversationId" column="conversation_id" />
         <result property="role" column="role" />
         <result property="content" column="content" />
+        <result property="imageUrl" column="image_url" />
         <result property="createTime" column="create_time" />
     </resultMap>
 
     <insert id="insert" parameterType="cc.ztzhome.zblog.bean.entity.ChatMessageEntity"
             useGeneratedKeys="true" keyProperty="messageId">
-        INSERT INTO tb_chat_message (conversation_id, role, content, create_time)
-        VALUES (#{conversationId}, #{role}, #{content}, #{createTime})
+        INSERT INTO tb_chat_message (conversation_id, role, content, image_url, create_time)
+        VALUES (#{conversationId}, #{role}, #{content}, #{imageUrl}, #{createTime})
     </insert>
 
     <select id="selectByConversationId" resultMap="MessageResultMap">

@@ -116,6 +116,7 @@ create table tb_chat_message
     conversation_id bigint                             not null comment '会话ID',
     role            varchar(16)                        not null comment '角色: user | assistant',
     content         text                               not null comment '消息内容',
+    image_url       varchar(1024)                      null comment '生成的图片URL',
     create_time     datetime default CURRENT_TIMESTAMP not null comment '创建时间'
 )
     comment 'AI聊天消息表' collate = utf8mb4_unicode_ci;
