@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Setter
 @Getter
-public class Follow {
+public class BlogFollow {
     private long followId;
     private long followerId;
     private long followeeId;
