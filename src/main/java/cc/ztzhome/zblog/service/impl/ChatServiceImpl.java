@@ -40,7 +40,11 @@ public class ChatServiceImpl implements IChatService {
 
     @Autowired
     @Qualifier("openAiChatModel")
-    private ChatModel chatModel;  // AI聊天模型（OpenAI）
+    private ChatModel openAiChatModel;  // Qwen千问模型（图片处理）
+
+    @Autowired
+    @Qualifier("deepSeekChatModel")
+    private ChatModel deepSeekChatModel;  // DeepSeek模型（聊天/帮助）
 
     /**
      * 发送消息并获取AI回复
@@ -51,7 +55,7 @@ public class ChatServiceImpl implements IChatService {
      * @return 包含AI回复消息的响应对象
      */
     @Override
-    public ResponseModel<ChatMessageVo> sendMessage(Long userId, Long conversationId, String message) {
+    public ResponseModel<ChatMessageVo> sendMessage(Long userId, Long conversationId, String message, String model) {
         // 用户未登录校验
         if (userId == null) {
             return ResponseModel.error(ResponseModel.CODE_UNAUTHORIZED, "请先登录");
@@ -103,9 +107,12 @@ public class ChatServiceImpl implements IChatService {
             }
         }
 
+        // 根据模型类型选择对应的AI模型
+        ChatModel selectedModel = "image".equals(model) ? openAiChatModel : deepSeekChatModel;
+
         // 调用AI模型获取回复
         try {
-            ChatResponse response = chatModel.call(new Prompt(messages));
+            ChatResponse response = selectedModel.call(new Prompt(messages));
             String aiContent = Objects.requireNonNull(response.getResult()).getOutput().getText();
 
             // 保存AI回复消息

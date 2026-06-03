@@ -8,4 +8,5 @@ import lombok.Setter;
 public class SendMessageDto {
     private Long conversationId;
     private String message;
+    private String model;
 }

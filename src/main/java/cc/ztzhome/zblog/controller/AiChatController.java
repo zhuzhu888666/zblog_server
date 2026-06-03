@@ -22,7 +22,7 @@ public class AiChatController {
             @RequestBody SendMessageDto dto,
             HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        return chatService.sendMessage(userId, dto.getConversationId(), dto.getMessage());
+        return chatService.sendMessage(userId, dto.getConversationId(), dto.getMessage(), dto.getModel());
     }
 
     @GetMapping("/chat/conversations")

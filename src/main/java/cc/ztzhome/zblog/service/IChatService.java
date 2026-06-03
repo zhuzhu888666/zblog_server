@@ -7,7 +7,7 @@ import cc.ztzhome.zblog.bean.vo.ConversationVo;
 import java.util.List;
 
 public interface IChatService {
-    ResponseModel<ChatMessageVo> sendMessage(Long userId, Long conversationId, String message);
+    ResponseModel<ChatMessageVo> sendMessage(Long userId, Long conversationId, String message, String model);
 
     ResponseModel<List<ConversationVo>> listConversations(Long userId);
 
