@@ -95,6 +95,24 @@ create index idx_article_id
 create index idx_user_id
     on tb_blog_like (user_id);
 
+create table tb_user_follow
+(
+    follow_id   bigint auto_increment comment '关注ID'
+        primary key,
+    follower_id bigint                             not null comment '关注者用户ID',
+    followee_id bigint                             not null comment '被关注者用户ID',
+    create_time datetime default CURRENT_TIMESTAMP not null comment '关注时间',
+    constraint uk_follower_followee
+        unique (follower_id, followee_id)
+)
+    comment '用户关注表' collate = utf8mb4_unicode_ci;
+
+create index idx_follower_id
+    on tb_user_follow (follower_id);
+
+create index idx_followee_id
+    on tb_user_follow (followee_id);
+
 create table tb_chat_conversation
 (
     conversation_id bigint auto_increment comment '会话ID'

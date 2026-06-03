@@ -3,27 +3,31 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cc.ztzhome.zblog.mapper.ChatMessageMapper">
 
+    <!-- 字段映射：数据库字段(下划线) → Java实体属性(驼峰) -->
     <resultMap id="MessageResultMap" type="cc.ztzhome.zblog.bean.entity.ChatMessageEntity">
         <id property="messageId" column="message_id" />
         <result property="conversationId" column="conversation_id" />
         <result property="role" column="role" />
         <result property="content" column="content" />
-        <result property="imageUrl" column="image_url" />
+        <result property="imageUrl" column="image_url" />  <!-- AI生成的图片预签名URL -->
         <result property="createTime" column="create_time" />
     </resultMap>
 
+    <!-- 插入新消息（自增主键回填到messageId） -->
     <insert id="insert" parameterType="cc.ztzhome.zblog.bean.entity.ChatMessageEntity"
             useGeneratedKeys="true" keyProperty="messageId">
         INSERT INTO tb_chat_message (conversation_id, role, content, image_url, create_time)
         VALUES (#{conversationId}, #{role}, #{content}, #{imageUrl}, #{createTime})
     </insert>
 
+    <!-- 按对话ID查询所有消息（按时间升序排列，保证对话顺序） -->
     <select id="selectByConversationId" resultMap="MessageResultMap">
         SELECT * FROM tb_chat_message
         WHERE conversation_id = #{conversationId}
         ORDER BY create_time ASC
     </select>
 
+    <!-- 删除指定对话下的所有消息 -->
     <delete id="deleteByConversationId">
         DELETE FROM tb_chat_message WHERE conversation_id = #{conversationId}
     </delete>

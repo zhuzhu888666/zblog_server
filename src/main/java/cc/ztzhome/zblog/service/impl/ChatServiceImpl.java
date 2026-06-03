@@ -52,11 +52,12 @@ public class ChatServiceImpl implements IChatService {
 
     @Autowired
     @Qualifier("deepSeekChatModel")
-    private ChatModel deepSeekChatModel;  // DeepSeek模型（聊天/帮助）
+    private ChatModel deepSeekChatModel;  // DeepSeek文本对话模型（chat/help模式）
 
     @Autowired
-    private RustFsService rustFsService;
+    private RustFsService rustFsService;  // RustFS对象存储服务（S3兼容，用于持久化生成的图片）
 
+    /** 阿里云百炼 DashScope API密钥（用于通义万相图像生成） */
     @Value("${spring.ai.dashscope.api-key}")
     private String dashscopeApiKey;
 
@@ -121,15 +122,14 @@ public class ChatServiceImpl implements IChatService {
             }
         }
 
-        // 图片处理模型走图像生成流程
+        // 模型路由：image走图像生成（通义万相），chat/help走文本对话（DeepSeek）
         if ("image".equals(model)) {
             return handleImageGeneration(conversationId, message.trim(), conversation);
         }
 
-        // 根据模型类型选择对应的AI模型
+        // 文本对话模式：使用DeepSeek模型进行文本生成
         ChatModel selectedModel = deepSeekChatModel;
-
-        // 调用AI模型获取回复
+        // 调用AI模型获取文本回复
         try {
             ChatResponse response = selectedModel.call(new Prompt(messages));
             String aiContent = Objects.requireNonNull(response.getResult()).getOutput().getText();
@@ -229,22 +229,32 @@ public class ChatServiceImpl implements IChatService {
 
     /**
      * 处理图片生成请求（阿里云百炼 DashScope SDK 原生调用）
-     * 1. 调用通义万相API获取临时图片URL
-     * 2. 下载图片并上传到RustFS S3
-     * 3. 生成预签名URL并保存消息
+     *
+     * 整体流程：
+     * 1. 调用通义万相（wanx2.0-t2i-turbo）文生图API，获取OSS临时图片URL
+     * 2. 通过RestTemplate下载图片字节流（使用URI对象避免OSS签名URL二次编码）
+     * 3. 上传到RustFS S3对象存储，实现持久化
+     * 4. 生成24小时有效的预签名GET URL，存入消息记录
+     * 5. 前端通过imageUrl字段展示图片，点击可预览大图
+     *
+     * @param conversationId 对话ID
+     * @param prompt         用户输入的图片描述提示词
+     * @param conversation   对话实体（用于更新活跃时间）
+     * @return 包含生成图片URL的响应
      */
     private ResponseModel<ChatMessageVo> handleImageGeneration(
             Long conversationId, String prompt, ChatConversation conversation) {
 
-        // 1. 调用通义万相图像生成API
+        // 1. 构建通义万相图像生成参数：模型、提示词、数量、尺寸
         ImageSynthesisParam param = ImageSynthesisParam.builder()
-                .apiKey(dashscopeApiKey)
-                .model("wanx2.0-t2i-turbo")
-                .prompt(prompt)
-                .n(1)
-                .size("1024*1024")
+                .apiKey(dashscopeApiKey)          // 百炼API密钥
+                .model("wanx2.0-t2i-turbo")       // 通义万相2.0文生图模型
+                .prompt(prompt)                    // 用户输入的图片描述
+                .n(1)                              // 每次生成1张图片
+                .size("1024*1024")                 // 输出分辨率 1024×1024
                 .build();
 
+        // 调用百炼图像生成API（同步阻塞调用）
         ImageSynthesisResult result;
         try {
             result = new ImageSynthesis().call(param);
@@ -256,13 +266,14 @@ public class ChatServiceImpl implements IChatService {
             return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "图片生成失败，请稍后再试");
         }
 
+        // 从响应中提取临时图片URL（百炼返回的是OSS临时链接，有有效期）
         String tempImageUrl = result.getOutput().getResults().get(0).get("url");
         if (tempImageUrl == null || tempImageUrl.isBlank()) {
             log.error("Image generation returned empty URL");
             return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "图片生成失败，未返回图片");
         }
 
-        // 2. 下载生成的图片
+        // 2. 下载生成的图片到内存（使用URI.create避免RestTemplate对OSS签名URL中的%2F二次编码）
         byte[] imageBytes;
         try {
             imageBytes = new RestTemplate().getForObject(URI.create(tempImageUrl), byte[].class);
@@ -275,7 +286,7 @@ public class ChatServiceImpl implements IChatService {
             return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "下载的图片为空");
         }
 
-        // 3. 上传到RustFS S3
+        // 3. 上传到RustFS S3对象存储（将临时链接转为持久化存储）
         String objectKey = AppConstants.AI_IMAGE_PATH + UUID.randomUUID() + ".png";
         try {
             rustFsService.upload(objectKey, new ByteArrayInputStream(imageBytes),
@@ -285,7 +296,7 @@ public class ChatServiceImpl implements IChatService {
             return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "图片存储失败");
         }
 
-        // 4. 生成预签名URL
+        // 4. 生成S3预签名GET URL（有效期由AppConstants.URL_TIMEOUT控制，默认24小时）
         String presignedUrl;
         try {
             presignedUrl = rustFsService.presignedGetUrl(objectKey, AppConstants.URL_TIMEOUT);
@@ -294,14 +305,15 @@ public class ChatServiceImpl implements IChatService {
             return ResponseModel.error(ResponseModel.CODE_INTERNAL_ERROR, "生成图片链接失败");
         }
 
-        // 5. 保存AI回复消息
+        // 5. 保存AI回复消息：content为占位文本，imageUrl存储预签名图片链接
         ChatMessageEntity aiMsg = new ChatMessageEntity();
         aiMsg.setConversationId(conversationId);
         aiMsg.setRole("assistant");
         aiMsg.setContent("[生成的图片]");
-        aiMsg.setImageUrl(presignedUrl);
+        aiMsg.setImageUrl(presignedUrl);          // 前端通过此字段渲染图片
         chatMessageMapper.insert(aiMsg);
 
+        // 更新对话的最后活跃时间
         conversationMapper.updateTime(conversationId);
 
         return ResponseModel.success(toMessageVo(aiMsg));

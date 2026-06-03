@@ -39,7 +39,7 @@ public final class AppConstants {
     /** 轮播图片存放路径 */
     public static final String CAROUSEL_IMAGE = "image/carousel/";
 
-    /** AI生成的图片存放路径 */
+    /** AI生成的图片存放路径（通义万相文生图结果持久化到S3的目录） */
     public static final String AI_IMAGE_PATH = "image/ai-generated/";
 
 
